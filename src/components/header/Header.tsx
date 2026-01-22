@@ -5,7 +5,6 @@ import {
   FolderOpen,
   Download,
   Key,
-  Compass,
 } from 'lucide-react'
 import { useConceptMapStore } from '../../store/conceptMapStore'
 import { Button } from '../common/Button'
@@ -53,14 +52,11 @@ export function Header() {
       {/* Left side - Logo and name */}
       <div className="flex items-center gap-3">
         {/* Logo */}
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-primary-pink rounded-lg flex items-center justify-center">
-            <Compass className="text-white" size={18} />
-          </div>
-          <span className="text-lg font-bold text-text-primary hidden sm:block">
-            Concept Map Explorer
-          </span>
-        </div>
+        <span className="text-xl tracking-tight" style={{ fontFamily: 'Nunito, sans-serif' }}>
+          <span className="font-bold text-gray-500">my</span>
+          <span className="font-black text-gray-900">Rabbit</span>
+          <span className="font-black text-pink-500">Hole</span>
+        </span>
 
         {/* Divider */}
         <div className="w-px h-6 bg-divider hidden sm:block" />
