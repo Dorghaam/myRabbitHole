@@ -36,17 +36,23 @@ export const ContentNode = memo(function ContentNode({
     <div onClick={handleClick} className="relative">
       {/* Single unified card with internal layout */}
       <div
-        className="flex rounded-2xl overflow-hidden"
+        className="flex rounded-2xl overflow-hidden transition-all duration-150"
         style={{
-          backgroundColor: '#F7F9FC',
-          border: `2px solid #1e3a5f`,
+          backgroundColor: selected ? '#FDF2F8' : '#F7F9FC',
+          border: `2px solid ${selected ? '#EC4899' : '#1e3a5f'}`,
           boxShadow: selected
-            ? '0 6px 0 0 #1e3a5f, 0 0 0 2px rgba(30, 58, 95, 0.3)'
-            : '0 6px 0 0 #1e3a5f',
+            ? '6px 6px 0 0 #EC4899, 0 0 0 3px rgba(236, 72, 153, 0.3)'
+            : '6px 6px 0 0 #1e3a5f',
         }}
       >
-        {/* Content area */}
-        <div className="p-4 flex-1" style={{ width: '280px', maxWidth: '350px' }}>
+        {/* Content area - width adjusts based on content length */}
+        <div
+          className="p-4 flex-1"
+          style={{
+            width: data.content && data.content.length > 500 ? '300px' : '240px',
+            maxWidth: '320px'
+          }}
+        >
           <h3 className="text-lg font-bold text-gray-900 mb-3">
             {data.title}
           </h3>

@@ -32,13 +32,13 @@ export const TopicNode = memo(function TopicNode({
     <div onClick={handleClick} className="relative">
       {/* Single unified card */}
       <div
-        className="flex items-center rounded-2xl overflow-hidden"
+        className="flex items-center rounded-2xl overflow-hidden transition-all duration-150"
         style={{
-          backgroundColor: '#F7F9FC',
-          border: `2px solid #1e3a5f`,
+          backgroundColor: selected ? '#FDF2F8' : '#F7F9FC',
+          border: `2px solid ${selected ? '#EC4899' : '#1e3a5f'}`,
           boxShadow: selected
-            ? '0 6px 0 0 #1e3a5f, 0 0 0 2px rgba(30, 58, 95, 0.3)'
-            : '0 6px 0 0 #1e3a5f',
+            ? '6px 6px 0 0 #EC4899, 0 0 0 3px rgba(236, 72, 153, 0.3)'
+            : '6px 6px 0 0 #1e3a5f',
         }}
       >
         {/* Topic text */}

@@ -61,9 +61,9 @@ export function PromptSidebar() {
   `
 
   return (
-    <aside className="w-[280px] flex flex-col h-full">
+    <aside className="w-[280px] flex flex-col h-full bg-transparent">
       {/* Header */}
-      <div className="flex items-center justify-between px-3 py-2">
+      <div className="flex items-center justify-between px-3 py-2 bg-transparent">
         <span className="text-sm font-medium text-gray-600">
           "{truncatedLabel}"
         </span>
@@ -76,7 +76,7 @@ export function PromptSidebar() {
       </div>
 
       {/* Scrollable content */}
-      <div className="flex-1 overflow-y-auto px-3 py-2">
+      <div className="flex-1 overflow-y-auto px-3 py-2 bg-transparent">
         {showCustomInput ? (
           <div className="space-y-2">
             <p className="text-sm text-gray-600">
@@ -163,7 +163,7 @@ export function PromptSidebar() {
       </div>
 
       {/* Footer - Chat button (blue) */}
-      <div className="px-3 py-2">
+      <div className="px-3 py-2 bg-transparent">
         <button
           onClick={openChatModal}
           className="w-full px-3 py-2.5 bg-blue-500 text-white rounded-full font-medium border-2 border-blue-600 shadow-[0_3px_0_0_#1e40af] hover:shadow-[0_2px_0_0_#1e40af] hover:translate-y-[1px] active:shadow-none active:translate-y-[3px] transition-all duration-100 flex items-center justify-center gap-2 text-sm"
