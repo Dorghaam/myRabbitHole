@@ -1,8 +1,9 @@
-import { memo } from 'react'
+import { memo, useState, useRef, useEffect } from 'react'
 import { Handle, Position, type NodeProps } from '@xyflow/react'
-import { MoreVertical, Settings, ChevronDown } from 'lucide-react'
+import { MoreVertical, Settings, ChevronDown, Trash2 } from 'lucide-react'
 import { ContentNodeData } from '../../../types'
 import { useConceptMapStore } from '../../../store/conceptMapStore'
+import { getNodeColors } from '../../../config/colors'
 
 type ContentNodeProps = NodeProps & {
   data: ContentNodeData
@@ -12,7 +13,19 @@ export const ContentNode = memo(function ContentNode({
   data,
   selected,
 }: ContentNodeProps) {
-  const { selectNode, openColorPicker } = useConceptMapStore()
+  const { selectNode, openColorPicker, deleteNode } = useConceptMapStore()
+  const [showMenu, setShowMenu] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setShowMenu(false)
+      }
+    }
+    if (showMenu) document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [showMenu])
 
   const handleClick = () => {
     selectNode(data.id)
@@ -20,6 +33,7 @@ export const ContentNode = memo(function ContentNode({
 
   const handleMenuClick = (e: React.MouseEvent) => {
     e.stopPropagation()
+    setShowMenu(!showMenu)
   }
 
   const handleSettingsClick = (e: React.MouseEvent) => {
@@ -32,17 +46,25 @@ export const ContentNode = memo(function ContentNode({
     e.stopPropagation()
   }
 
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    setShowMenu(false)
+    deleteNode(data.id)
+  }
+
+  const colors = getNodeColors(data.color)
+
   return (
     <div onClick={handleClick} className="relative">
       {/* Single unified card with internal layout */}
       <div
         className="flex rounded-2xl overflow-hidden transition-all duration-150"
         style={{
-          backgroundColor: selected ? '#FDF2F8' : '#F7F9FC',
-          border: `2px solid ${selected ? '#EC4899' : '#1e3a5f'}`,
+          backgroundColor: colors.bg,
+          border: `2px solid ${selected ? '#EC4899' : colors.border}`,
           boxShadow: selected
             ? '6px 6px 0 0 #EC4899, 0 0 0 3px rgba(236, 72, 153, 0.3)'
-            : '6px 6px 0 0 #1e3a5f',
+            : `6px 6px 0 0 ${colors.border}`,
         }}
       >
         {/* Content area - width adjusts based on content length */}
@@ -70,25 +92,38 @@ export const ContentNode = memo(function ContentNode({
         />
 
         {/* Action icons column - INSIDE the card */}
-        <div className="flex flex-col items-center justify-start gap-1 px-2 py-3">
+        <div className="flex flex-col items-center justify-start gap-1 px-2 py-3 nodrag nopan relative" ref={menuRef}>
           <button
             onClick={handleMenuClick}
-            className="p-1.5 rounded-lg hover:bg-gray-200 text-gray-400 transition-colors"
+            className="p-1.5 rounded-lg hover:bg-black/10 text-gray-800 transition-colors"
           >
             <MoreVertical size={18} />
           </button>
           <button
             onClick={handleSettingsClick}
-            className="p-1.5 rounded-lg hover:bg-gray-200 text-gray-400 transition-colors"
+            className="p-1.5 rounded-lg hover:bg-black/10 text-gray-800 transition-colors"
           >
             <Settings size={18} />
           </button>
           <button
             onClick={handleCollapseClick}
-            className="p-1.5 rounded-lg hover:bg-gray-200 text-gray-400 transition-colors"
+            className="p-1.5 rounded-lg hover:bg-black/10 text-gray-800 transition-colors"
           >
             <ChevronDown size={18} />
           </button>
+
+          {/* Dropdown menu */}
+          {showMenu && (
+            <div className="absolute top-full right-0 mt-1 bg-white rounded-lg shadow-lg border border-gray-200 py-1 min-w-[120px] z-50">
+              <button
+                onClick={handleDelete}
+                className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+              >
+                <Trash2 size={14} />
+                Delete
+              </button>
+            </div>
+          )}
         </div>
       </div>
 

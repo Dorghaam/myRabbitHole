@@ -3,8 +3,6 @@ import { Check } from 'lucide-react'
 import { useConceptMapStore } from '../../store/conceptMapStore'
 import { NODE_COLORS } from '../../config/colors'
 import { NodeColor } from '../../types'
-import { Modal } from '../common/Modal'
-import { Button } from '../common/Button'
 
 export function ColorPickerModal() {
   const {
@@ -40,66 +38,69 @@ export function ColorPickerModal() {
     (typeof NODE_COLORS)[NodeColor]
   ][]
 
+  if (!isColorPickerOpen) return null
+
   return (
-    <Modal
-      isOpen={isColorPickerOpen}
-      onClose={closeColorPicker}
-      title="Choose Color"
-      size="sm"
-    >
-      <div className="p-6">
+    <div className="fixed inset-0 z-50 flex items-end justify-center">
+      <div
+        className="absolute inset-0 bg-black/30 modal-backdrop"
+        onClick={closeColorPicker}
+      />
+      <div className="relative bg-white rounded-t-2xl shadow-xl z-10 w-full max-w-[520px] p-5 pb-6 animate-slide-up">
+        {/* Close button */}
+        <button
+          onClick={closeColorPicker}
+          className="absolute top-3 right-4 p-1 rounded-lg hover:bg-gray-100 text-gray-500 transition-colors"
+        >
+          <span className="text-2xl leading-none">&times;</span>
+        </button>
+
         {/* Color grid */}
-        <div className="grid grid-cols-4 gap-3 mb-6">
+        <div className="grid grid-cols-6 gap-2.5 mb-5 mt-1">
           {colorEntries.map(([color, config]) => (
             <button
               key={color}
               onClick={() => setSelectedColor(color)}
-              className="relative group"
+              className="relative"
               title={config.name}
             >
               <div
-                className="w-14 h-14 rounded-lg border-2 transition-all"
+                className="w-full aspect-[4/3] rounded-lg border-[2.5px] transition-all flex items-center justify-center"
                 style={{
                   backgroundColor: config.bg,
-                  borderColor:
-                    selectedColor === color ? config.accent : config.border,
+                  borderColor: selectedColor === color ? '#EC4899' : '#1e3a5f',
+                  boxShadow: selectedColor === color ? '0 0 0 2px #EC4899' : 'none',
                 }}
               >
-                {selectedColor === color && (
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <Check
-                      size={20}
-                      style={{ color: config.accent }}
-                      strokeWidth={3}
-                    />
-                  </div>
+                {color === NodeColor.DEFAULT && (
+                  <span className="text-xs font-semibold text-gray-700">Default</span>
+                )}
+                {selectedColor === color && color !== NodeColor.DEFAULT && (
+                  <Check size={18} className="text-gray-800" strokeWidth={3} />
                 )}
               </div>
-              <p className="text-xs text-text-muted text-center mt-1">
-                {config.name}
-              </p>
             </button>
           ))}
         </div>
 
         {/* Action buttons */}
         <div className="flex gap-3">
-          <Button
-            variant="secondary"
-            className="flex-1"
+          <button
             onClick={handleApplyToNode}
+            className="flex-1 px-4 py-2 text-sm font-semibold rounded-lg text-white transition-colors hover:opacity-90"
+            style={{ backgroundColor: '#EC4899' }}
           >
-            This Node
-          </Button>
-          <Button
-            variant="primary"
-            className="flex-1"
+            Apply to This Node
+          </button>
+          <button
             onClick={handleApplyToSimilar}
+            className="flex-1 px-4 py-2 text-sm font-semibold rounded-lg text-white transition-colors hover:opacity-90"
+            style={{ backgroundColor: '#EC4899' }}
           >
-            Similar Nodes
-          </Button>
+            Apply to Every Similar Node
+          </button>
         </div>
       </div>
-    </Modal>
+    </div>
   )
 }
