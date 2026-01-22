@@ -64,6 +64,11 @@ interface ConceptMapStore {
   isStreaming: boolean
   customPromptText: string
 
+  // Reader Modal State
+  isReaderOpen: boolean
+  readerTitle: string
+  readerContent: string
+
   // Chat State
   chatMessages: ChatMessage[]
   isChatStreaming: boolean
@@ -104,6 +109,8 @@ interface ConceptMapStore {
   closeApiKeyModal: () => void
   openExtractModal: (terms: TermItem[]) => void
   closeExtractModal: () => void
+  openReader: (title: string, content: string) => void
+  closeReader: () => void
   addSelectedTerms: (selectedIndices: number[]) => void
   setCustomPromptText: (text: string) => void
 
@@ -165,6 +172,10 @@ export const useConceptMapStore = create<ConceptMapStore>()(
       currentResponse: '',
       isStreaming: false,
       customPromptText: '',
+
+      isReaderOpen: false,
+      readerTitle: '',
+      readerContent: '',
 
       chatMessages: [],
       isChatStreaming: false,
@@ -567,6 +578,11 @@ export const useConceptMapStore = create<ConceptMapStore>()(
         set({ isExtractModalOpen: true, extractedTerms: terms }),
       closeExtractModal: () =>
         set({ isExtractModalOpen: false, extractedTerms: [] }),
+
+      openReader: (title: string, content: string) =>
+        set({ isReaderOpen: true, readerTitle: title, readerContent: content }),
+      closeReader: () =>
+        set({ isReaderOpen: false, readerTitle: '', readerContent: '' }),
 
       addSelectedTerms: (selectedIndices: number[]) => {
         const { selectedNodeId, nodes, edges, extractedTerms, currentPromptType } =

@@ -13,7 +13,7 @@ export const ContentNode = memo(function ContentNode({
   data,
   selected,
 }: ContentNodeProps) {
-  const { selectNode, openColorPicker, deleteNode } = useConceptMapStore()
+  const { selectNode, openColorPicker, deleteNode, openReader } = useConceptMapStore()
   const [showMenu, setShowMenu] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
 
@@ -29,6 +29,11 @@ export const ContentNode = memo(function ContentNode({
 
   const handleClick = () => {
     selectNode(data.id)
+  }
+
+  const handleDoubleClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    openReader(data.title, data.content)
   }
 
   const handleMenuClick = (e: React.MouseEvent) => {
@@ -55,7 +60,7 @@ export const ContentNode = memo(function ContentNode({
   const colors = getNodeColors(data.color)
 
   return (
-    <div onClick={handleClick} className="relative">
+    <div onClick={handleClick} onDoubleClick={handleDoubleClick} className="relative">
       {/* Single unified card with internal layout */}
       <div
         className="flex rounded-2xl transition-all duration-150"
