@@ -29,7 +29,7 @@ export const TermNode = memo(function TermNode({
   }
 
   return (
-    <div onClick={handleClick} className="relative">
+    <div onClick={handleClick} className="relative" style={{ width: 240 }}>
       {/* Single unified card */}
       <div
         className="flex items-stretch rounded-2xl overflow-hidden transition-all duration-150"
@@ -42,7 +42,7 @@ export const TermNode = memo(function TermNode({
         }}
       >
         {/* Content area */}
-        <div className="px-4 py-3">
+        <div className="flex-1 min-w-0 px-4 py-3">
           {/* Pink TERMS badge */}
           <span
             className="inline-block text-xs font-semibold uppercase px-2 py-0.5 rounded mb-1"
@@ -54,7 +54,7 @@ export const TermNode = memo(function TermNode({
             TERMS
           </span>
           {/* Term name */}
-          <h4 className="text-sm font-bold text-gray-900 whitespace-nowrap">
+          <h4 className="text-sm font-bold text-gray-900 break-words">
             {data.term}
           </h4>
         </div>

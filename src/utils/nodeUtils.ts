@@ -121,10 +121,10 @@ export function createEdge(
 
 const CONTENT_NODE_WIDTH = 280
 const CONTENT_NODE_HEIGHT = 200
-const TERM_NODE_WIDTH = 140
-const TERM_NODE_HEIGHT = 60
+const TERM_NODE_WIDTH = 240
+const TERM_NODE_HEIGHT = 80
 const VERTICAL_GAP = 80
-const HORIZONTAL_GAP = 20
+const HORIZONTAL_GAP = 30
 
 export function calculateChildPosition(
   parentNode: Node<ConceptNodeData>,
@@ -134,12 +134,17 @@ export function calculateChildPosition(
   const parentX = parentNode.position.x
   const parentY = parentNode.position.y
 
-  // Get parent dimensions based on type
-  let parentHeight = 50 // default for topic
-  if (parentNode.type === 'content') {
+  // Use measured dimensions if available (from React Flow), fall back to constants
+  const measuredHeight = (parentNode as any).measured?.height
+  let parentHeight: number
+  if (measuredHeight) {
+    parentHeight = measuredHeight
+  } else if (parentNode.type === 'content') {
     parentHeight = CONTENT_NODE_HEIGHT
   } else if (parentNode.type === 'term') {
     parentHeight = TERM_NODE_HEIGHT
+  } else {
+    parentHeight = 50
   }
 
   // Calculate y position (below parent)
@@ -169,11 +174,17 @@ export function calculateTermNodesPositions(
   const parentX = parentNode.position.x
   const parentY = parentNode.position.y
 
-  let parentHeight = 50
-  if (parentNode.type === 'content') {
+  // Use measured dimensions if available (from React Flow), fall back to constants
+  const measuredHeight = (parentNode as any).measured?.height
+  let parentHeight: number
+  if (measuredHeight) {
+    parentHeight = measuredHeight
+  } else if (parentNode.type === 'content') {
     parentHeight = CONTENT_NODE_HEIGHT
   } else if (parentNode.type === 'term') {
     parentHeight = TERM_NODE_HEIGHT
+  } else {
+    parentHeight = 50
   }
 
   const y = parentY + parentHeight + VERTICAL_GAP
