@@ -53,6 +53,7 @@ interface ConceptMapStore {
   isLoadModalOpen: boolean
   isApiKeyModalOpen: boolean
   isExtractModalOpen: boolean
+  isExtractLoading: boolean
 
   // Extract Selection State
   extractedTerms: TermItem[]
@@ -150,6 +151,7 @@ export const useConceptMapStore = create<ConceptMapStore>()(
       isLoadModalOpen: false,
       isApiKeyModalOpen: false,
       isExtractModalOpen: false,
+      isExtractLoading: false,
 
       extractedTerms: [],
 
@@ -207,34 +209,72 @@ export const useConceptMapStore = create<ConceptMapStore>()(
         const config = getPromptConfig(promptType)
         if (!config) return
 
-        set({
-          isResponseModalOpen: true,
-          currentPromptType: promptType,
-          currentResponse: '',
-          isStreaming: true,
-        })
+        // For term-generating prompts, skip ResponseModal and show bottom loading
+        if (config.generatesTerms) {
+          set({
+            isExtractLoading: true,
+            currentPromptType: promptType,
+            currentResponse: '',
+          })
 
-        try {
-          const nodeText = getNodeText(selectedNode)
-          let prompt = config.systemPrompt
+          try {
+            const nodeText = getNodeText(selectedNode)
+            const service = new GeminiService(apiKey)
+            let fullResponse = ''
 
-          if (promptType === PromptType.CUSTOM && customPrompt) {
-            prompt = `${config.systemPrompt}\n\nUser's question: ${customPrompt}`
+            for await (const chunk of service.streamGenerate(config.systemPrompt, nodeText)) {
+              fullResponse += chunk
+            }
+
+            // Parse terms and open selection modal directly
+            const terms = parseTermsFromResponse(fullResponse)
+            if (terms.length === 0) {
+              get().addToast('Could not parse terms from response', 'error')
+            } else {
+              set({
+                extractedTerms: terms,
+                isExtractModalOpen: true,
+              })
+            }
+          } catch (error) {
+            console.error('Generation error:', error)
+            const errorMessage =
+              error instanceof Error ? error.message : 'Generation failed'
+            get().addToast(errorMessage, 'error')
+          } finally {
+            set({ isExtractLoading: false })
           }
+        } else {
+          // Non-term prompts: show ResponseModal as before
+          set({
+            isResponseModalOpen: true,
+            currentPromptType: promptType,
+            currentResponse: '',
+            isStreaming: true,
+          })
 
-          const service = new GeminiService(apiKey)
-          for await (const chunk of service.streamGenerate(prompt, nodeText)) {
-            set((state) => ({
-              currentResponse: state.currentResponse + chunk,
-            }))
+          try {
+            const nodeText = getNodeText(selectedNode)
+            let prompt = config.systemPrompt
+
+            if (promptType === PromptType.CUSTOM && customPrompt) {
+              prompt = `${config.systemPrompt}\n\nUser's question: ${customPrompt}`
+            }
+
+            const service = new GeminiService(apiKey)
+            for await (const chunk of service.streamGenerate(prompt, nodeText)) {
+              set((state) => ({
+                currentResponse: state.currentResponse + chunk,
+              }))
+            }
+          } catch (error) {
+            console.error('Generation error:', error)
+            const errorMessage =
+              error instanceof Error ? error.message : 'Generation failed'
+            get().addToast(errorMessage, 'error')
+          } finally {
+            set({ isStreaming: false })
           }
-        } catch (error) {
-          console.error('Generation error:', error)
-          const errorMessage =
-            error instanceof Error ? error.message : 'Generation failed'
-          get().addToast(errorMessage, 'error')
-        } finally {
-          set({ isStreaming: false })
         }
       },
 

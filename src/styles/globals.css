@@ -84,3 +84,19 @@ body {
 .modal-backdrop {
   backdrop-filter: blur(4px);
 }
+
+/* Bottom sheet slide up animation */
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-up {
+  animation: slideUp 0.25s ease-out forwards;
+}
