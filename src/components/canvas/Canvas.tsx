@@ -35,7 +35,7 @@ export function Canvas() {
   // Default edge options
   const defaultEdgeOptions = useMemo(
     () => ({
-      type: 'smoothstep',
+      type: 'bezier',
       style: {
         stroke: '#9CA3AF',
         strokeWidth: 2,

@@ -753,7 +753,7 @@ export const useConceptMapStore = create<ConceptMapStore>()(
           target: data.target,
           sourceHandle: data.sourceHandle,
           targetHandle: data.targetHandle,
-          type: 'smoothstep',
+          type: 'bezier',
           data,
         }))
 

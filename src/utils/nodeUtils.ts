@@ -104,7 +104,7 @@ export function createEdge(
     target: targetId,
     sourceHandle: 'bottom',
     targetHandle: 'top',
-    type: 'smoothstep',
+    type: 'bezier',
     data: {
       id,
       source: sourceId,
