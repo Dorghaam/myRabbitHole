@@ -5,6 +5,8 @@ import { PROMPT_CONFIG } from '../../config/prompts'
 import { PromptType } from '../../types'
 import { getNodeLabel } from '../../utils/nodeUtils'
 
+const DIFFICULTY_LABELS = ['ELI5', 'Middle School', 'High School', 'Undergrad', 'Expert']
+
 export function PromptSidebar() {
   const {
     selectedNodeId,
@@ -13,6 +15,8 @@ export function PromptSidebar() {
     generateResponse,
     openChatModal,
     setCustomPromptText,
+    difficultyLevel,
+    setDifficultyLevel,
   } = useConceptMapStore()
 
   const [showCustomInput, setShowCustomInput] = useState(false)
@@ -108,6 +112,27 @@ export function PromptSidebar() {
           </div>
         ) : (
           <div className="space-y-2">
+            {/* Difficulty slider */}
+            <div className="bg-white rounded-xl border border-gray-200 px-3 py-2.5 mb-1">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Difficulty</span>
+                <span className="text-xs font-medium text-pink-600">{DIFFICULTY_LABELS[difficultyLevel]}</span>
+              </div>
+              <input
+                type="range"
+                min={0}
+                max={4}
+                step={1}
+                value={difficultyLevel}
+                onChange={(e) => setDifficultyLevel(Number(e.target.value))}
+                className="w-full h-1.5 bg-gray-200 rounded-full appearance-none cursor-pointer accent-pink-500"
+              />
+              <div className="flex justify-between mt-1">
+                <span className="text-[10px] text-gray-400">ELI5</span>
+                <span className="text-[10px] text-gray-400">Expert</span>
+              </div>
+            </div>
+
             {/* Add New button - pink */}
             <div className="grid grid-cols-2 gap-2">
               <button

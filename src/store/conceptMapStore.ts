@@ -68,6 +68,9 @@ interface ConceptMapStore {
   chatMessages: ChatMessage[]
   isChatStreaming: boolean
 
+  // Difficulty
+  difficultyLevel: number // 0-4: ELI5, Middle School, High School, Undergraduate, Expert
+
   // Settings
   apiKey: string | null
 
@@ -119,6 +122,9 @@ interface ConceptMapStore {
   setProjectName: (name: string) => void
   exportJSON: () => void
 
+  // Difficulty
+  setDifficultyLevel: (level: number) => void
+
   // API Key
   setApiKey: (key: string) => void
 
@@ -163,6 +169,8 @@ export const useConceptMapStore = create<ConceptMapStore>()(
       chatMessages: [],
       isChatStreaming: false,
 
+      difficultyLevel: 2, // Default: High School
+
       apiKey: import.meta.env.VITE_GEMINI_API_KEY || null,
 
       toasts: [],
@@ -194,7 +202,7 @@ export const useConceptMapStore = create<ConceptMapStore>()(
         promptType: PromptType,
         customPrompt?: string
       ) => {
-        const { selectedNodeId, nodes, apiKey } = get()
+        const { selectedNodeId, nodes, apiKey, difficultyLevel } = get()
         if (!selectedNodeId) return
 
         if (!apiKey) {
@@ -209,6 +217,16 @@ export const useConceptMapStore = create<ConceptMapStore>()(
         const config = getPromptConfig(promptType)
         if (!config) return
 
+        // Difficulty level descriptions
+        const DIFFICULTY_LABELS = [
+          'Explain as if to a 5-year-old child. Use very simple words and analogies.',
+          'Explain at a middle school level. Use simple language suitable for a 12-year-old.',
+          'Explain at a high school level. Use clear language appropriate for a teenager.',
+          'Explain at an undergraduate university level. Use proper terminology.',
+          'Explain at an expert/graduate level. Use advanced terminology and assume deep knowledge.',
+        ]
+        const difficultyPrefix = `Difficulty level: ${DIFFICULTY_LABELS[difficultyLevel]}\n\n`
+
         // For term-generating prompts, skip ResponseModal and show bottom loading
         if (config.generatesTerms) {
           set({
@@ -222,7 +240,7 @@ export const useConceptMapStore = create<ConceptMapStore>()(
             const service = new GeminiService(apiKey)
             let fullResponse = ''
 
-            for await (const chunk of service.streamGenerate(config.systemPrompt, nodeText)) {
+            for await (const chunk of service.streamGenerate(difficultyPrefix + config.systemPrompt, nodeText)) {
               fullResponse += chunk
             }
 
@@ -255,10 +273,10 @@ export const useConceptMapStore = create<ConceptMapStore>()(
 
           try {
             const nodeText = getNodeText(selectedNode)
-            let prompt = config.systemPrompt
+            let prompt = difficultyPrefix + config.systemPrompt
 
             if (promptType === PromptType.CUSTOM && customPrompt) {
-              prompt = `${config.systemPrompt}\n\nUser's question: ${customPrompt}`
+              prompt = `${difficultyPrefix}${config.systemPrompt}\n\nUser's question: ${customPrompt}`
             }
 
             const service = new GeminiService(apiKey)
@@ -814,6 +832,10 @@ export const useConceptMapStore = create<ConceptMapStore>()(
 
         get().addToast('Project exported', 'success')
       },
+
+      // ========== DIFFICULTY ==========
+
+      setDifficultyLevel: (level: number) => set({ difficultyLevel: level }),
 
       // ========== API KEY ==========
 
