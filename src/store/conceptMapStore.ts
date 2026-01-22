@@ -151,7 +151,7 @@ export const useConceptMapStore = create<ConceptMapStore>()(
       chatMessages: [],
       isChatStreaming: false,
 
-      apiKey: 'AIzaSyBaNwGQ8u0vueBtAFyxCr86wG0eVUYCJug',
+      apiKey: import.meta.env.VITE_GEMINI_API_KEY || null,
 
       toasts: [],
 
