@@ -24,7 +24,7 @@ import {
   getAllDescendantIds,
   getDirectChildren,
 } from '../utils/nodeUtils'
-import { parseTermsFromResponse } from '../utils/parseUtils'
+import { parseTermsFromResponse, TermItem } from '../utils/parseUtils'
 import { GeminiService } from '../services/geminiService'
 import { storageService } from '../services/storageService'
 
@@ -52,6 +52,10 @@ interface ConceptMapStore {
   isChatModalOpen: boolean
   isLoadModalOpen: boolean
   isApiKeyModalOpen: boolean
+  isExtractModalOpen: boolean
+
+  // Extract Selection State
+  extractedTerms: TermItem[]
 
   // Response Modal State
   currentPromptType: PromptType | null
@@ -94,6 +98,9 @@ interface ConceptMapStore {
   closeLoadModal: () => void
   openApiKeyModal: () => void
   closeApiKeyModal: () => void
+  openExtractModal: (terms: TermItem[]) => void
+  closeExtractModal: () => void
+  addSelectedTerms: (selectedIndices: number[]) => void
   setCustomPromptText: (text: string) => void
 
   // Chat actions
@@ -142,6 +149,9 @@ export const useConceptMapStore = create<ConceptMapStore>()(
       isChatModalOpen: false,
       isLoadModalOpen: false,
       isApiKeyModalOpen: false,
+      isExtractModalOpen: false,
+
+      extractedTerms: [],
 
       currentPromptType: null,
       currentResponse: '',
@@ -248,7 +258,7 @@ export const useConceptMapStore = create<ConceptMapStore>()(
         let newEdges: Edge<ConceptEdgeData>[] = []
 
         if (config.generatesTerms) {
-          // Parse JSON response and create multiple Term nodes
+          // Parse JSON response and show selection modal
           const terms = parseTermsFromResponse(currentResponse)
 
           if (terms.length === 0) {
@@ -256,22 +266,9 @@ export const useConceptMapStore = create<ConceptMapStore>()(
             return
           }
 
-          const positions = calculateTermNodesPositions(
-            parentNode,
-            terms.length
-          )
-
-          newNodes = terms.map((term, index) =>
-            createTermNode(
-              term.name,
-              term.description,
-              selectedNodeId,
-              currentPromptType,
-              positions[index]
-            )
-          )
-
-          newEdges = newNodes.map((node) => createEdge(selectedNodeId, node.id))
+          // Open selection modal instead of auto-adding
+          get().openExtractModal(terms)
+          return
         } else {
           // Create single Content node
           const existingChildren = getDirectChildren(
@@ -502,6 +499,74 @@ export const useConceptMapStore = create<ConceptMapStore>()(
 
       openApiKeyModal: () => set({ isApiKeyModalOpen: true }),
       closeApiKeyModal: () => set({ isApiKeyModalOpen: false }),
+
+      openExtractModal: (terms: TermItem[]) =>
+        set({ isExtractModalOpen: true, extractedTerms: terms }),
+      closeExtractModal: () =>
+        set({ isExtractModalOpen: false, extractedTerms: [] }),
+
+      addSelectedTerms: (selectedIndices: number[]) => {
+        const { selectedNodeId, nodes, edges, extractedTerms, currentPromptType } =
+          get()
+        if (!selectedNodeId || selectedIndices.length === 0) return
+
+        const parentNode = nodes.find((n) => n.id === selectedNodeId)
+        if (!parentNode) return
+
+        // Get only the selected terms
+        const selectedTerms = selectedIndices
+          .map((i) => extractedTerms[i])
+          .filter(Boolean)
+
+        if (selectedTerms.length === 0) return
+
+        const positions = calculateTermNodesPositions(
+          parentNode,
+          selectedTerms.length
+        )
+
+        const newNodes = selectedTerms.map((term, index) =>
+          createTermNode(
+            term.name,
+            term.description,
+            selectedNodeId,
+            currentPromptType || PromptType.EXTRACT,
+            positions[index]
+          )
+        )
+
+        const newEdges = newNodes.map((node) =>
+          createEdge(selectedNodeId, node.id)
+        )
+
+        // Update parent's childIds
+        const updatedNodes = nodes.map((n) =>
+          n.id === selectedNodeId
+            ? {
+                ...n,
+                data: {
+                  ...n.data,
+                  childIds: [...n.data.childIds, ...newNodes.map((node) => node.id)],
+                },
+              }
+            : n
+        )
+
+        set({
+          nodes: [...updatedNodes, ...newNodes],
+          edges: [...edges, ...newEdges],
+          isExtractModalOpen: false,
+          extractedTerms: [],
+          isResponseModalOpen: false,
+          currentResponse: '',
+          currentPromptType: null,
+        })
+
+        get().addToast(
+          `Added ${selectedTerms.length} term${selectedTerms.length > 1 ? 's' : ''} to concept map`,
+          'success'
+        )
+      },
 
       setCustomPromptText: (text: string) => set({ customPromptText: text }),
 
