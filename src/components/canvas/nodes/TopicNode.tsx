@@ -35,8 +35,10 @@ export const TopicNode = memo(function TopicNode({
         className="flex items-center rounded-2xl overflow-hidden"
         style={{
           backgroundColor: '#F7F9FC',
-          border: `2px solid ${selected ? '#1e3a5f' : '#1e3a5f'}`,
-          boxShadow: selected ? '0 0 0 2px rgba(30, 58, 95, 0.3)' : 'none',
+          border: `2px solid #1e3a5f`,
+          boxShadow: selected
+            ? '0 6px 0 0 #1e3a5f, 0 0 0 2px rgba(30, 58, 95, 0.3)'
+            : '0 6px 0 0 #1e3a5f',
         }}
       >
         {/* Topic text */}
@@ -91,7 +93,7 @@ export const TopicNode = memo(function TopicNode({
           height: 14,
           background: 'white',
           border: '2px solid #9ca3af',
-          bottom: -7,
+          bottom: -13,
         }}
       />
     </div>

@@ -39,16 +39,18 @@ export const ContentNode = memo(function ContentNode({
         className="flex rounded-2xl overflow-hidden"
         style={{
           backgroundColor: '#F7F9FC',
-          border: `2px solid ${selected ? '#1e3a5f' : '#1e3a5f'}`,
-          boxShadow: selected ? '0 0 0 2px rgba(30, 58, 95, 0.3)' : 'none',
+          border: `2px solid #1e3a5f`,
+          boxShadow: selected
+            ? '0 6px 0 0 #1e3a5f, 0 0 0 2px rgba(30, 58, 95, 0.3)'
+            : '0 6px 0 0 #1e3a5f',
         }}
       >
         {/* Content area */}
-        <div className="p-4 flex-1" style={{ maxWidth: '260px' }}>
+        <div className="p-4 flex-1" style={{ width: '280px', maxWidth: '350px' }}>
           <h3 className="text-lg font-bold text-gray-900 mb-3">
             {data.title}
           </h3>
-          <div className="max-h-[300px] overflow-y-auto pr-2">
+          <div>
             <p className="text-sm text-gray-600 leading-relaxed">
               {data.content}
             </p>
@@ -106,7 +108,7 @@ export const ContentNode = memo(function ContentNode({
           height: 14,
           background: 'white',
           border: '2px solid #9ca3af',
-          bottom: -7,
+          bottom: -13,
         }}
       />
     </div>
