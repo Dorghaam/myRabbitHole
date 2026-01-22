@@ -54,7 +54,7 @@ export const TopicNode = memo(function TopicNode({
     <div onClick={handleClick} className="relative">
       {/* Single unified card */}
       <div
-        className="flex items-center rounded-2xl overflow-hidden transition-all duration-150"
+        className="flex items-center rounded-2xl transition-all duration-150"
         style={{
           backgroundColor: colors.bg,
           border: `2px solid ${selected ? '#EC4899' : colors.border}`,

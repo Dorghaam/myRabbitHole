@@ -54,7 +54,7 @@ export const TermNode = memo(function TermNode({
     <div onClick={handleClick} className="relative" style={{ width: 240 }}>
       {/* Single unified card */}
       <div
-        className="flex items-stretch rounded-2xl overflow-hidden transition-all duration-150"
+        className="flex items-stretch rounded-2xl transition-all duration-150"
         style={{
           backgroundColor: colors.bg,
           border: `2px solid ${selected ? '#EC4899' : colors.border}`,

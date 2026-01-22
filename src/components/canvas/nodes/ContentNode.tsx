@@ -58,7 +58,7 @@ export const ContentNode = memo(function ContentNode({
     <div onClick={handleClick} className="relative">
       {/* Single unified card with internal layout */}
       <div
-        className="flex rounded-2xl overflow-hidden transition-all duration-150"
+        className="flex rounded-2xl transition-all duration-150"
         style={{
           backgroundColor: colors.bg,
           border: `2px solid ${selected ? '#EC4899' : colors.border}`,
