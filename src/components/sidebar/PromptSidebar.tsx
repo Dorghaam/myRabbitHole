@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { X, MessageSquare, Sparkles, Undo, Redo } from 'lucide-react'
+import { useState, useRef, useEffect } from 'react'
+import { X, MessageSquare, Sparkles, Undo, Redo, ChevronDown } from 'lucide-react'
 import { useConceptMapStore } from '../../store/conceptMapStore'
 import { PROMPT_CONFIG } from '../../config/prompts'
 import { PromptType } from '../../types'
@@ -21,6 +21,18 @@ export function PromptSidebar() {
 
   const [showCustomInput, setShowCustomInput] = useState(false)
   const [customPrompt, setCustomPrompt] = useState('')
+  const [showDifficultyDropdown, setShowDifficultyDropdown] = useState(false)
+  const difficultyRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (difficultyRef.current && !difficultyRef.current.contains(e.target as Node)) {
+        setShowDifficultyDropdown(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   const selectedNode = nodes.find((n) => n.id === selectedNodeId)
 
@@ -55,7 +67,7 @@ export function PromptSidebar() {
 
   // 3D Pill button style - compact with dark navy shadow
   const pillButtonStyle = `
-    px-3 py-2 text-sm font-medium rounded-full
+    px-2.5 py-1.5 text-xs font-medium rounded-full
     bg-white border-2 border-gray-800
     shadow-[0_3px_0_0_#1e3a5f]
     hover:shadow-[0_2px_0_0_#1e3a5f] hover:translate-y-[1px]
@@ -65,9 +77,9 @@ export function PromptSidebar() {
   `
 
   return (
-    <aside className="w-[280px] flex flex-col h-full bg-transparent">
+    <aside className="w-[250px] flex flex-col h-full bg-transparent">
       {/* Header */}
-      <div className="flex items-center justify-between px-3 py-2 bg-transparent">
+      <div className="flex items-center justify-between px-3 py-1.5 bg-transparent">
         <span className="text-sm font-medium text-gray-600">
           "{truncatedLabel}"
         </span>
@@ -75,26 +87,26 @@ export function PromptSidebar() {
           onClick={handleClose}
           className="p-1 rounded hover:bg-gray-200 text-gray-500"
         >
-          <X size={18} />
+          <X size={16} />
         </button>
       </div>
 
       {/* Scrollable content */}
-      <div className="flex-1 overflow-y-auto px-3 py-2 bg-transparent">
+      <div className="flex-1 overflow-y-auto px-3 py-1 bg-transparent">
         {showCustomInput ? (
-          <div className="space-y-2">
-            <p className="text-sm text-gray-600">
+          <div className="space-y-1.5">
+            <p className="text-xs text-gray-600">
               Ask about "{truncatedLabel}":
             </p>
             <textarea
               value={customPrompt}
               onChange={(e) => setCustomPrompt(e.target.value)}
               placeholder="Enter your question..."
-              className="w-full px-3 py-2 border-2 border-gray-800 rounded-xl text-sm focus:outline-none focus:border-pink-500 resize-none bg-white"
+              className="w-full px-2.5 py-1.5 border-2 border-gray-800 rounded-xl text-xs focus:outline-none focus:border-pink-500 resize-none bg-white"
               rows={3}
               autoFocus
             />
-            <div className="flex gap-2">
+            <div className="flex gap-1.5">
               <button
                 onClick={() => setShowCustomInput(false)}
                 className={`flex-1 ${pillButtonStyle}`}
@@ -104,40 +116,48 @@ export function PromptSidebar() {
               <button
                 onClick={handleCustomSubmit}
                 disabled={!customPrompt.trim()}
-                className="flex-1 px-3 py-2 text-sm font-medium rounded-full bg-pink-500 text-white border-2 border-pink-600 shadow-[0_3px_0_0_#9d174d] hover:shadow-[0_2px_0_0_#9d174d] hover:translate-y-[1px] active:shadow-none active:translate-y-[3px] transition-all duration-100 disabled:opacity-50"
+                className="flex-1 px-2.5 py-1.5 text-xs font-medium rounded-full bg-pink-500 text-white border-2 border-pink-600 shadow-[0_3px_0_0_#9d174d] hover:shadow-[0_2px_0_0_#9d174d] hover:translate-y-[1px] active:shadow-none active:translate-y-[3px] transition-all duration-100 disabled:opacity-50"
               >
                 Generate
               </button>
             </div>
           </div>
         ) : (
-          <div className="space-y-2">
-            {/* Difficulty slider */}
-            <div className="bg-white rounded-xl border border-gray-200 px-3 py-2.5 mb-1">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Difficulty</span>
-                <span className="text-xs font-medium text-pink-600">{DIFFICULTY_LABELS[difficultyLevel]}</span>
-              </div>
-              <input
-                type="range"
-                min={0}
-                max={4}
-                step={1}
-                value={difficultyLevel}
-                onChange={(e) => setDifficultyLevel(Number(e.target.value))}
-                className="w-full h-1.5 bg-gray-200 rounded-full appearance-none cursor-pointer accent-pink-500"
-              />
-              <div className="flex justify-between mt-1">
-                <span className="text-[10px] text-gray-400">ELI5</span>
-                <span className="text-[10px] text-gray-400">Expert</span>
-              </div>
+          <div className="space-y-1.5">
+            {/* Difficulty dropdown */}
+            <div className="relative" ref={difficultyRef}>
+              <button
+                onClick={() => setShowDifficultyDropdown(!showDifficultyDropdown)}
+                className={`${pillButtonStyle} w-full flex items-center justify-between`}
+              >
+                <span>{DIFFICULTY_LABELS[difficultyLevel]}</span>
+                <ChevronDown size={14} className={`transition-transform ${showDifficultyDropdown ? 'rotate-180' : ''}`} />
+              </button>
+              {showDifficultyDropdown && (
+                <div className="absolute top-full left-0 right-0 mt-1 z-20 bg-white border-2 border-gray-800 rounded-xl overflow-hidden shadow-[0_3px_0_0_#1e3a5f]">
+                  {DIFFICULTY_LABELS.map((label, index) => (
+                    <button
+                      key={label}
+                      onClick={() => {
+                        setDifficultyLevel(index)
+                        setShowDifficultyDropdown(false)
+                      }}
+                      className={`w-full px-3 py-1.5 text-xs font-medium text-left hover:bg-gray-100 transition-colors ${
+                        index === difficultyLevel ? 'text-pink-600 bg-pink-50' : 'text-gray-700'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
-            {/* Add New button - pink */}
-            <div className="grid grid-cols-2 gap-2">
+            {/* Add New button - pink + What */}
+            <div className="grid grid-cols-2 gap-1.5">
               <button
                 onClick={() => handlePromptClick(PromptType.WHAT)}
-                className="px-3 py-2 text-sm font-medium rounded-full bg-pink-500 text-white border-2 border-pink-600 shadow-[0_3px_0_0_#9d174d] hover:shadow-[0_2px_0_0_#9d174d] hover:translate-y-[1px] active:shadow-none active:translate-y-[3px] transition-all duration-100"
+                className="px-2.5 py-1.5 text-xs font-medium rounded-full bg-pink-500 text-white border-2 border-pink-600 shadow-[0_3px_0_0_#9d174d] hover:shadow-[0_2px_0_0_#9d174d] hover:translate-y-[1px] active:shadow-none active:translate-y-[3px] transition-all duration-100"
               >
                 Add New
               </button>
@@ -150,7 +170,7 @@ export function PromptSidebar() {
             </div>
 
             {/* Prompt buttons grid */}
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-1.5">
               {promptButtons.slice(1).map((config) => (
                 <button
                   key={config.type}
@@ -166,36 +186,34 @@ export function PromptSidebar() {
             {/* Custom Prompt - full width */}
             <button
               onClick={() => setShowCustomInput(true)}
-              className="w-full px-3 py-2 text-sm font-medium rounded-full bg-gray-100 text-gray-600 border-2 border-gray-800 shadow-[0_3px_0_0_#1e3a5f] hover:shadow-[0_2px_0_0_#1e3a5f] hover:translate-y-[1px] active:shadow-none active:translate-y-[3px] transition-all duration-100 flex items-center justify-center gap-2"
+              className="w-full px-2.5 py-1.5 text-xs font-medium rounded-full bg-gray-100 text-gray-600 border-2 border-gray-800 shadow-[0_3px_0_0_#1e3a5f] hover:shadow-[0_2px_0_0_#1e3a5f] hover:translate-y-[1px] active:shadow-none active:translate-y-[3px] transition-all duration-100 flex items-center justify-center gap-1.5"
             >
-              <Sparkles size={14} />
+              <Sparkles size={12} />
               Custom Prompt
             </button>
 
             {/* Undo / Redo row */}
-            <div className="grid grid-cols-2 gap-2">
-              <button className={`${pillButtonStyle} flex items-center justify-center gap-1.5`}>
-                <Undo size={14} />
+            <div className="grid grid-cols-2 gap-1.5">
+              <button className={`${pillButtonStyle} flex items-center justify-center gap-1`}>
+                <Undo size={12} />
                 Undo
               </button>
-              <button className={`${pillButtonStyle} flex items-center justify-center gap-1.5`}>
-                <Redo size={14} />
+              <button className={`${pillButtonStyle} flex items-center justify-center gap-1`}>
+                <Redo size={12} />
                 Redo
               </button>
             </div>
+
+            {/* Chat button (blue) */}
+            <button
+              onClick={openChatModal}
+              className="w-full px-2.5 py-2 bg-blue-500 text-white rounded-full font-medium border-2 border-blue-600 shadow-[0_3px_0_0_#1e40af] hover:shadow-[0_2px_0_0_#1e40af] hover:translate-y-[1px] active:shadow-none active:translate-y-[3px] transition-all duration-100 flex items-center justify-center gap-2 text-xs"
+            >
+              <MessageSquare size={14} />
+              Chat with Concept Map
+            </button>
           </div>
         )}
-      </div>
-
-      {/* Footer - Chat button (blue) */}
-      <div className="px-3 py-2 bg-transparent">
-        <button
-          onClick={openChatModal}
-          className="w-full px-3 py-2.5 bg-blue-500 text-white rounded-full font-medium border-2 border-blue-600 shadow-[0_3px_0_0_#1e40af] hover:shadow-[0_2px_0_0_#1e40af] hover:translate-y-[1px] active:shadow-none active:translate-y-[3px] transition-all duration-100 flex items-center justify-center gap-2 text-sm"
-        >
-          <MessageSquare size={16} />
-          Chat with Concept Map
-        </button>
       </div>
     </aside>
   )

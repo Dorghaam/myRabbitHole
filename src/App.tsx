@@ -22,16 +22,18 @@ function App() {
       <div className="h-screen w-screen flex flex-col bg-canvas-bg">
         <Header />
 
-        <div className="flex-1 flex overflow-hidden">
-          <div className="flex-1 relative">
-            {showTopicInput ? (
-              <TopicInput />
-            ) : (
-              <Canvas />
-            )}
-          </div>
+        <div className="flex-1 relative overflow-hidden">
+          {showTopicInput ? (
+            <TopicInput />
+          ) : (
+            <Canvas />
+          )}
 
-          {isSidebarOpen && <PromptSidebar />}
+          {isSidebarOpen && (
+            <div className="absolute top-0 right-0 h-full z-10">
+              <PromptSidebar />
+            </div>
+          )}
         </div>
 
         {/* Modals */}
