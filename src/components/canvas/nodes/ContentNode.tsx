@@ -1,9 +1,8 @@
 import { memo } from 'react'
 import { Handle, Position, type NodeProps } from '@xyflow/react'
+import { MoreVertical, Settings, ChevronDown } from 'lucide-react'
 import { ContentNodeData } from '../../../types'
-import { getNodeColors } from '../../../config/colors'
 import { useConceptMapStore } from '../../../store/conceptMapStore'
-import { NodeActionIcons } from './NodeActionIcons'
 
 type ContentNodeProps = NodeProps & {
   data: ContentNodeData
@@ -13,87 +12,102 @@ export const ContentNode = memo(function ContentNode({
   data,
   selected,
 }: ContentNodeProps) {
-  const { selectNode } = useConceptMapStore()
-  const colors = getNodeColors(data.color)
+  const { selectNode, openColorPicker } = useConceptMapStore()
 
   const handleClick = () => {
     selectNode(data.id)
   }
 
+  const handleMenuClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
+  }
+
+  const handleSettingsClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    selectNode(data.id)
+    openColorPicker()
+  }
+
+  const handleCollapseClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
+  }
+
   return (
-    <div
-      onClick={handleClick}
-      className="relative"
-      style={{ width: '280px' }}
-    >
-      {/* Main node container */}
+    <div onClick={handleClick} className="relative">
+      {/* Single unified card with internal layout */}
       <div
-        className="rounded-2xl shadow-md transition-all cursor-pointer overflow-hidden"
+        className="flex rounded-2xl overflow-hidden"
         style={{
-          backgroundColor: colors.bg,
-          border: selected
-            ? `2px solid ${colors.accent}`
-            : `2px solid ${colors.border}`,
+          backgroundColor: '#F7F9FC',
+          border: `2px solid ${selected ? '#1e3a5f' : '#1e3a5f'}`,
+          boxShadow: selected ? '0 0 0 2px rgba(30, 58, 95, 0.3)' : 'none',
         }}
       >
-        {/* Pink corner handles - decorative */}
-        <div
-          className="absolute top-0 left-0 w-2.5 h-2.5 rounded-tl-xl z-10"
-          style={{ backgroundColor: colors.accent }}
-        />
-        <div
-          className="absolute top-0 right-0 w-2.5 h-2.5 rounded-tr-xl z-10"
-          style={{ backgroundColor: colors.accent }}
-        />
-        <div
-          className="absolute bottom-0 left-0 w-2.5 h-2.5 rounded-bl-xl z-10"
-          style={{ backgroundColor: colors.accent }}
-        />
-        <div
-          className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-br-xl z-10"
-          style={{ backgroundColor: colors.accent }}
-        />
-
-        {/* Left accent bar */}
-        <div
-          className="absolute left-0 top-0 bottom-0 w-1 rounded-l-xl"
-          style={{ backgroundColor: colors.accent }}
-        />
-
-        {/* Content */}
-        <div className="pl-4 pr-3 py-4">
-          {/* Header */}
-          <div className="flex items-start justify-between mb-2">
-            <h3
-              className="text-lg font-semibold"
-              style={{ color: colors.accent }}
-            >
-              {data.title}
-            </h3>
-            <NodeActionIcons nodeId={data.id} showRegenerate />
-          </div>
-
-          {/* Content text */}
+        {/* Content area */}
+        <div className="p-4 flex-1" style={{ maxWidth: '260px' }}>
+          <h3 className="text-lg font-bold text-gray-900 mb-3">
+            {data.title}
+          </h3>
           <div className="max-h-[300px] overflow-y-auto pr-2">
-            <p className="text-sm text-text-secondary leading-relaxed">
+            <p className="text-sm text-gray-600 leading-relaxed">
               {data.content}
             </p>
           </div>
         </div>
+
+        {/* Internal vertical divider */}
+        <div
+          className="w-px self-stretch"
+          style={{ backgroundColor: '#d1d5db' }}
+        />
+
+        {/* Action icons column - INSIDE the card */}
+        <div className="flex flex-col items-center justify-start gap-1 px-2 py-3">
+          <button
+            onClick={handleMenuClick}
+            className="p-1.5 rounded-lg hover:bg-gray-200 text-gray-400 transition-colors"
+          >
+            <MoreVertical size={18} />
+          </button>
+          <button
+            onClick={handleSettingsClick}
+            className="p-1.5 rounded-lg hover:bg-gray-200 text-gray-400 transition-colors"
+          >
+            <Settings size={18} />
+          </button>
+          <button
+            onClick={handleCollapseClick}
+            className="p-1.5 rounded-lg hover:bg-gray-200 text-gray-400 transition-colors"
+          >
+            <ChevronDown size={18} />
+          </button>
+        </div>
       </div>
 
-      {/* Connection handles */}
+      {/* Connection handles - centered on border */}
       <Handle
         type="target"
         position={Position.Top}
         id="top"
-        className="!w-3 !h-3 !bg-gray-400 !border-2 !border-white"
+        style={{
+          width: 14,
+          height: 14,
+          background: 'white',
+          border: '2px solid #9ca3af',
+          top: -7,
+        }}
       />
       <Handle
         type="source"
         position={Position.Bottom}
         id="bottom"
-        className="!w-3 !h-3 !bg-gray-400 !border-2 !border-white"
+        style={{
+          width: 14,
+          height: 14,
+          background: 'white',
+          border: '2px solid #9ca3af',
+          bottom: -7,
+        }}
       />
     </div>
   )

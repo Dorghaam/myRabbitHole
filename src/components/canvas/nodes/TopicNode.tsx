@@ -1,7 +1,7 @@
 import { memo } from 'react'
 import { Handle, Position, type NodeProps } from '@xyflow/react'
+import { MoreVertical, Settings } from 'lucide-react'
 import { TopicNodeData } from '../../../types'
-import { getNodeColors } from '../../../config/colors'
 import { useConceptMapStore } from '../../../store/conceptMapStore'
 
 type TopicNodeProps = NodeProps & {
@@ -12,59 +12,87 @@ export const TopicNode = memo(function TopicNode({
   data,
   selected,
 }: TopicNodeProps) {
-  const { selectNode } = useConceptMapStore()
-  const colors = getNodeColors(data.color)
+  const { selectNode, openColorPicker } = useConceptMapStore()
 
   const handleClick = () => {
     selectNode(data.id)
   }
 
+  const handleMenuClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
+  }
+
+  const handleSettingsClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    selectNode(data.id)
+    openColorPicker()
+  }
+
   return (
-    <div
-      onClick={handleClick}
-      className="relative"
-      style={{ minWidth: '200px' }}
-    >
-      {/* Main node container */}
+    <div onClick={handleClick} className="relative">
+      {/* Single unified card */}
       <div
-        className="px-6 py-4 rounded-xl shadow-md transition-all cursor-pointer"
+        className="flex items-center rounded-2xl overflow-hidden"
         style={{
-          backgroundColor: colors.bg,
-          border: selected
-            ? `2px solid ${colors.accent}`
-            : `2px solid ${colors.border}`,
+          backgroundColor: '#F7F9FC',
+          border: `2px solid ${selected ? '#1e3a5f' : '#1e3a5f'}`,
+          boxShadow: selected ? '0 0 0 2px rgba(30, 58, 95, 0.3)' : 'none',
         }}
       >
-        {/* Pink corner handles - decorative */}
+        {/* Topic text */}
+        <div className="px-5 py-3">
+          <h2 className="text-base font-bold text-gray-900 whitespace-nowrap">
+            {data.topic}
+          </h2>
+        </div>
+
+        {/* Internal vertical divider */}
         <div
-          className="absolute top-0 left-0 w-2.5 h-2.5 rounded-tl-lg"
-          style={{ backgroundColor: colors.accent }}
-        />
-        <div
-          className="absolute top-0 right-0 w-2.5 h-2.5 rounded-tr-lg"
-          style={{ backgroundColor: colors.accent }}
-        />
-        <div
-          className="absolute bottom-0 left-0 w-2.5 h-2.5 rounded-bl-lg"
-          style={{ backgroundColor: colors.accent }}
-        />
-        <div
-          className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-br-lg"
-          style={{ backgroundColor: colors.accent }}
+          className="w-px self-stretch"
+          style={{ backgroundColor: '#d1d5db' }}
         />
 
-        {/* Topic text */}
-        <h2 className="text-lg font-semibold text-text-primary text-center">
-          {data.topic}
-        </h2>
+        {/* Action icons - INSIDE the card */}
+        <div className="flex flex-col items-center gap-0.5 px-1.5 py-2">
+          <button
+            onClick={handleMenuClick}
+            className="p-1 rounded hover:bg-gray-200 text-gray-400 transition-colors"
+          >
+            <MoreVertical size={16} />
+          </button>
+          <button
+            onClick={handleSettingsClick}
+            className="p-1 rounded hover:bg-gray-200 text-gray-400 transition-colors"
+          >
+            <Settings size={16} />
+          </button>
+        </div>
       </div>
 
       {/* Connection handles */}
       <Handle
+        type="target"
+        position={Position.Top}
+        id="top"
+        style={{
+          width: 14,
+          height: 14,
+          background: 'white',
+          border: '2px solid #9ca3af',
+          top: -7,
+        }}
+      />
+      <Handle
         type="source"
         position={Position.Bottom}
         id="bottom"
-        className="!w-3 !h-3 !bg-gray-400 !border-2 !border-white"
+        style={{
+          width: 14,
+          height: 14,
+          background: 'white',
+          border: '2px solid #9ca3af',
+          bottom: -7,
+        }}
       />
     </div>
   )

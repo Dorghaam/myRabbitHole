@@ -1,9 +1,8 @@
 import { memo } from 'react'
 import { Handle, Position, type NodeProps } from '@xyflow/react'
+import { MoreVertical, Settings } from 'lucide-react'
 import { TermNodeData } from '../../../types'
-import { getNodeColors } from '../../../config/colors'
 import { useConceptMapStore } from '../../../store/conceptMapStore'
-import { NodeActionIcons } from './NodeActionIcons'
 
 type TermNodeProps = NodeProps & {
   data: TermNodeData
@@ -13,56 +12,71 @@ export const TermNode = memo(function TermNode({
   data,
   selected,
 }: TermNodeProps) {
-  const { selectNode } = useConceptMapStore()
-  const colors = getNodeColors(data.color)
+  const { selectNode, openColorPicker } = useConceptMapStore()
 
   const handleClick = () => {
     selectNode(data.id)
   }
 
+  const handleMenuClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
+  }
+
+  const handleSettingsClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    selectNode(data.id)
+    openColorPicker()
+  }
+
   return (
-    <div
-      onClick={handleClick}
-      className="relative"
-      style={{ minWidth: '120px', maxWidth: '180px' }}
-    >
-      {/* Main node container */}
+    <div onClick={handleClick} className="relative">
+      {/* Single unified card */}
       <div
-        className="rounded-xl shadow-md transition-all cursor-pointer overflow-hidden"
+        className="flex items-stretch rounded-2xl overflow-hidden"
         style={{
-          backgroundColor: colors.bg,
-          border: selected
-            ? `2px solid ${colors.accent}`
-            : `2px solid ${colors.border}`,
+          backgroundColor: '#F7F9FC',
+          border: `2px solid ${selected ? '#1e3a5f' : '#1e3a5f'}`,
+          boxShadow: selected ? '0 0 0 2px rgba(30, 58, 95, 0.3)' : 'none',
         }}
       >
-        {/* Content */}
-        <div className="px-3 py-3">
-          {/* Badge and actions row */}
-          <div className="flex items-start justify-between mb-1">
-            <span
-              className="text-[10px] font-semibold uppercase px-2 py-0.5 rounded"
-              style={{
-                backgroundColor: colors.accent,
-                color: 'white',
-              }}
-            >
-              TERM
-            </span>
-            <NodeActionIcons nodeId={data.id} />
-          </div>
-
-          {/* Term label */}
-          <h4 className="text-sm font-semibold text-text-primary mt-2 truncate">
+        {/* Content area */}
+        <div className="px-4 py-3">
+          {/* Pink TERMS badge */}
+          <span
+            className="inline-block text-xs font-semibold uppercase px-2 py-0.5 rounded mb-1"
+            style={{
+              backgroundColor: '#EC4899',
+              color: 'white',
+            }}
+          >
+            TERMS
+          </span>
+          {/* Term name */}
+          <h4 className="text-sm font-bold text-gray-900 whitespace-nowrap">
             {data.term}
           </h4>
+        </div>
 
-          {/* Definition on hover - shown as subtitle */}
-          {data.definition && (
-            <p className="text-xs text-text-muted mt-1 line-clamp-2">
-              {data.definition}
-            </p>
-          )}
+        {/* Internal vertical divider */}
+        <div
+          className="w-px self-stretch"
+          style={{ backgroundColor: '#d1d5db' }}
+        />
+
+        {/* Action icons - INSIDE the card */}
+        <div className="flex flex-col items-center gap-0.5 px-1.5 py-2">
+          <button
+            onClick={handleMenuClick}
+            className="p-1 rounded hover:bg-gray-200 text-gray-400 transition-colors"
+          >
+            <MoreVertical size={14} />
+          </button>
+          <button
+            onClick={handleSettingsClick}
+            className="p-1 rounded hover:bg-gray-200 text-gray-400 transition-colors"
+          >
+            <Settings size={14} />
+          </button>
         </div>
       </div>
 
@@ -71,13 +85,25 @@ export const TermNode = memo(function TermNode({
         type="target"
         position={Position.Top}
         id="top"
-        className="!w-3 !h-3 !bg-gray-400 !border-2 !border-white"
+        style={{
+          width: 12,
+          height: 12,
+          background: 'white',
+          border: '2px solid #9ca3af',
+          top: -6,
+        }}
       />
       <Handle
         type="source"
         position={Position.Bottom}
         id="bottom"
-        className="!w-3 !h-3 !bg-gray-400 !border-2 !border-white"
+        style={{
+          width: 12,
+          height: 12,
+          background: 'white',
+          border: '2px solid #9ca3af',
+          bottom: -6,
+        }}
       />
     </div>
   )
