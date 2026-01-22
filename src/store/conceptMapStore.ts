@@ -24,7 +24,7 @@ import {
   getAllDescendantIds,
   getDirectChildren,
 } from '../utils/nodeUtils'
-import { parseTermsFromResponse, TermItem } from '../utils/parseUtils'
+import { parseTermsFromResponse, stripMarkdown, TermItem } from '../utils/parseUtils'
 import { GeminiService } from '../services/geminiService'
 import { storageService } from '../services/storageService'
 
@@ -285,6 +285,11 @@ export const useConceptMapStore = create<ConceptMapStore>()(
                 currentResponse: state.currentResponse + chunk,
               }))
             }
+
+            // Strip markdown from final response
+            set((state) => ({
+              currentResponse: stripMarkdown(state.currentResponse),
+            }))
           } catch (error) {
             console.error('Generation error:', error)
             const errorMessage =
@@ -690,7 +695,7 @@ export const useConceptMapStore = create<ConceptMapStore>()(
             set((state) => ({
               chatMessages: state.chatMessages.map((m) =>
                 m.id === assistantMessage.id
-                  ? { ...m, content: fullResponse }
+                  ? { ...m, content: stripMarkdown(fullResponse) }
                   : m
               ),
             }))

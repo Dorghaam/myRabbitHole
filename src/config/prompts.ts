@@ -26,14 +26,11 @@ Maximum 150 words.`,
     type: PromptType.WHO,
     label: 'Who',
     description: 'Key people, figures, or entities involved',
-    generatesTerms: true,
-    systemPrompt: `List the key people, figures, or entities associated with the given topic.
-Return ONLY a valid JSON array with 3-6 items in this exact format:
-[
-  {"name": "Person/Entity Name", "description": "Brief 10-word description"},
-  ...
-]
-No other text, just the JSON array.`,
+    generatesTerms: false,
+    systemPrompt: `Describe the key people, figures, or entities associated with the given topic.
+Explain who they are and their significance to this topic.
+Write in flowing prose, no bullet points.
+Maximum 150 words.`,
   },
   {
     type: PromptType.ORIGIN,

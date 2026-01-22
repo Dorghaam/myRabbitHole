@@ -41,6 +41,22 @@ export function parseTermsFromResponse(response: string): TermItem[] {
 }
 
 /**
+ * Strip markdown formatting from text
+ */
+export function stripMarkdown(text: string): string {
+  return text
+    .replace(/\*\*\*(.*?)\*\*\*/g, '$1') // bold italic
+    .replace(/\*\*(.*?)\*\*/g, '$1')     // bold
+    .replace(/\*(.*?)\*/g, '$1')         // italic
+    .replace(/__(.*?)__/g, '$1')         // bold alt
+    .replace(/_(.*?)_/g, '$1')           // italic alt
+    .replace(/~~(.*?)~~/g, '$1')         // strikethrough
+    .replace(/`(.*?)`/g, '$1')           // inline code
+    .replace(/^#{1,6}\s+/gm, '')         // headers
+    .replace(/```[\s\S]*?```/g, '')      // code blocks
+}
+
+/**
  * Clean up streaming text chunks
  */
 export function cleanStreamChunk(chunk: string): string {
