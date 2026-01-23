@@ -1,143 +1,70 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Search, Sparkles } from 'lucide-react'
 import { useConceptMapStore } from '../../store/conceptMapStore'
+import { GeminiService } from '../../services/geminiService'
 
-const allTopics = [
-  // Physics & Cosmology
-  'The Nature of Dark Matter',
-  'Quantum Entanglement',
-  'String Theory',
-  'Black Holes and Hawking Radiation',
-  'The Arrow of Time',
-  'Particle Physics and the Standard Model',
-  'Nuclear Fusion',
-  'Wave-Particle Duality',
-  // Mathematics
+const SUGGESTIONS_PROMPT = `You are a curator of deep, fascinating knowledge. Generate exactly 6 topic suggestions for someone who wants to genuinely understand the world at a deeper level.
+
+Rules:
+- Each topic should be something a curious, wise person would find genuinely valuable to explore deeply
+- Span across different realms: science, philosophy, history, psychology, mathematics, art, economics, biology, physics, technology, linguistics, anthropology, etc.
+- Avoid surface-level pop-science. Go for topics that reveal deep truths, hidden connections, or fundamentally change how you see the world
+- Topics should be specific enough to be interesting but broad enough to rabbit-hole into
+- Mix timeless wisdom with cutting-edge ideas
+- Each should be 2-5 words, concise but evocative
+- Never repeat the same set twice — be creative and varied every time
+
+Return ONLY a JSON array of 6 strings, nothing else. Example format:
+["Topic One", "Topic Two", "Topic Three", "Topic Four", "Topic Five", "Topic Six"]`
+
+const FALLBACK_SUGGESTIONS = [
+  'The Nature of Consciousness',
   'Gödel\'s Incompleteness Theorems',
-  'The Riemann Hypothesis',
-  'Fractal Geometry',
-  'Game Theory',
-  'Chaos Theory',
-  'The Mathematics of Infinity',
-  'Bayesian Statistics',
-  'Topology',
-  // Biology & Evolution
-  'CRISPR Gene Editing',
-  'The Origin of Life',
-  'Consciousness and the Brain',
-  'Epigenetics',
-  'The Microbiome',
-  'Convergent Evolution',
-  'Extremophiles',
-  'Symbiogenesis',
-  // Philosophy
-  'The Hard Problem of Consciousness',
-  'Existentialism',
-  'Stoicism',
-  'The Ship of Theseus',
-  'Free Will vs Determinism',
-  'Philosophy of Language',
-  'The Trolley Problem and Ethics',
-  'Phenomenology',
-  // History & Civilization
-  'The Fall of the Roman Empire',
-  'The Silk Road',
-  'The Library of Alexandria',
-  'The Ottoman Empire',
-  'The Mongol Conquests',
-  'Ancient Mesopotamia',
-  'The French Revolution',
-  'The Byzantine Empire',
-  'The Indus Valley Civilization',
-  'The Age of Exploration',
-  // Psychology & Neuroscience
-  'Cognitive Biases',
-  'The Psychology of Memory',
-  'Neuroplasticity',
-  'The Unconscious Mind',
-  'Flow States',
-  'The Dunning-Kruger Effect',
-  'Attachment Theory',
-  'Synesthesia',
-  // Technology & Computing
-  'How the Internet Works',
-  'Cryptography',
-  'Artificial General Intelligence',
-  'Blockchain Technology',
-  'Quantum Computing',
-  'The History of Computing',
-  'Neural Networks',
-  'The Halting Problem',
-  // Earth & Space
-  'Plate Tectonics',
   'The Fermi Paradox',
-  'Terraforming Mars',
-  'Deep Ocean Ecosystems',
-  'The Cambrian Explosion',
-  'Supervolcanoes',
-  'The Great Oxygenation Event',
-  'Asteroid Mining',
-  // Art & Culture
-  'The Renaissance',
-  'Surrealism',
-  'The Golden Ratio in Art',
-  'Japanese Aesthetics (Wabi-Sabi)',
-  'The Bauhaus Movement',
-  'Ancient Greek Theatre',
-  'The History of Jazz',
-  'Abstract Expressionism',
-  // Economics & Society
-  'Behavioral Economics',
-  'The Tragedy of the Commons',
-  'Universal Basic Income',
-  'The History of Money',
-  'Network Effects',
-  'The Prisoner\'s Dilemma',
-  'Mechanism Design',
-  'The Economics of Attention',
-  // Language & Communication
-  'The Origin of Language',
-  'The Sapir-Whorf Hypothesis',
-  'How Writing Systems Evolved',
-  'Dead Languages',
-  'The Science of Persuasion',
-  'Constructed Languages',
-  // Medicine & Health
-  'The Placebo Effect',
-  'The History of Vaccines',
-  'Psychedelics and Neuroscience',
-  'The Human Immune System',
-  'Circadian Rhythms',
-  'The Gut-Brain Axis',
-  // Chemistry & Materials
-  'Superconductors',
-  'The Chemistry of Cooking',
-  'Nanomaterials',
-  'Bioluminescence',
-  'Rare Earth Elements',
-  // Music & Sound
-  'The Mathematics of Music',
-  'How Sound Works',
-  'The History of Electronic Music',
-  'Perfect Pitch',
-  'Music and the Brain',
-  // Ecology & Environment
-  'Mycelium Networks',
-  'Coral Reef Ecosystems',
-  'The Sixth Mass Extinction',
-  'Rewilding',
-  'Carbon Capture',
+  'Emergence and Complexity',
+  'The Silk Road',
+  'Bayesian Reasoning',
 ]
-
-function pickRandom<T>(arr: T[], count: number): T[] {
-  const shuffled = [...arr].sort(() => Math.random() - 0.5)
-  return shuffled.slice(0, count)
-}
 
 export function TopicInput() {
   const [topic, setTopic] = useState('')
   const { setTopic: createTopic, apiKey, openApiKeyModal } = useConceptMapStore()
-  const [suggestions] = useState(() => pickRandom(allTopics, 6))
+  const [suggestions, setSuggestions] = useState<string[]>(FALLBACK_SUGGESTIONS)
+  const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    if (!apiKey) return
+
+    let cancelled = false
+    setLoading(true)
+
+    const fetchSuggestions = async () => {
+      try {
+        const service = new GeminiService(apiKey)
+        const response = await service.generate(
+          SUGGESTIONS_PROMPT,
+          'Generate 6 fascinating topics for deep exploration.'
+        )
+
+        if (cancelled) return
+
+        const jsonMatch = response.match(/\[[\s\S]*\]/)
+        if (jsonMatch) {
+          const parsed = JSON.parse(jsonMatch[0])
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setSuggestions(parsed.slice(0, 6))
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch topic suggestions:', err)
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+
+    fetchSuggestions()
+    return () => { cancelled = true }
+  }, [apiKey])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -204,15 +131,24 @@ export function TopicInput() {
         <div className="text-center">
           <p className="text-sm text-text-muted mb-3">Try exploring:</p>
           <div className="flex flex-wrap justify-center gap-2">
-            {suggestions.map((suggestion) => (
-              <button
-                key={suggestion}
-                onClick={() => handleSuggestionClick(suggestion)}
-                className="px-3 py-1.5 text-sm bg-white border border-node-border rounded-full hover:border-primary-pink hover:text-primary-pink transition-colors"
-              >
-                {suggestion}
-              </button>
-            ))}
+            {loading ? (
+              Array.from({ length: 6 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="px-3 py-1.5 h-8 w-32 bg-gray-100 border border-node-border rounded-full animate-pulse"
+                />
+              ))
+            ) : (
+              suggestions.map((suggestion) => (
+                <button
+                  key={suggestion}
+                  onClick={() => handleSuggestionClick(suggestion)}
+                  className="px-3 py-1.5 text-sm bg-white border border-node-border rounded-full hover:border-primary-pink hover:text-primary-pink transition-colors"
+                >
+                  {suggestion}
+                </button>
+              ))
+            )}
           </div>
         </div>
 
