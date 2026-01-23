@@ -10,6 +10,7 @@ import { ApiKeyModal } from './components/modals/ApiKeyModal'
 import { LoadModal } from './components/modals/LoadModal'
 import { ChatModal } from './components/modals/ChatModal'
 import { ExtractSelectionModal } from './components/modals/ExtractSelectionModal'
+import { WikipediaSelectionModal } from './components/modals/WikipediaSelectionModal'
 import { Toast } from './components/common/Toast'
 import { useConceptMapStore } from './store/conceptMapStore'
 
@@ -43,6 +44,7 @@ function App() {
         <LoadModal />
         <ChatModal />
         <ExtractSelectionModal />
+        <WikipediaSelectionModal />
         <Toast />
       </div>
     </ReactFlowProvider>

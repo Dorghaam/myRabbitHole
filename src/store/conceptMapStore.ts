@@ -17,16 +17,19 @@ import {
   createTopicNode,
   createContentNode,
   createTermNode,
+  createWikipediaNode,
   createEdge,
   calculateChildPosition,
   calculateTermNodesPositions,
   getNodeText,
+  getNodeLabel,
   getAllDescendantIds,
   getDirectChildren,
 } from '../utils/nodeUtils'
 import { parseTermsFromResponse, stripMarkdown, TermItem } from '../utils/parseUtils'
 import { GeminiService } from '../services/geminiService'
 import { storageService } from '../services/storageService'
+import { searchWikipedia as searchWikipediaApi, WikipediaSearchResult } from '../services/wikipediaService'
 
 // ============================================
 // STORE INTERFACE
@@ -57,6 +60,11 @@ interface ConceptMapStore {
 
   // Extract Selection State
   extractedTerms: TermItem[]
+
+  // Wikipedia State
+  isWikipediaModalOpen: boolean
+  isWikipediaLoading: boolean
+  wikipediaResults: WikipediaSearchResult[]
 
   // Response Modal State
   currentPromptType: PromptType | null
@@ -114,6 +122,11 @@ interface ConceptMapStore {
   addSelectedTerms: (selectedIndices: number[]) => void
   setCustomPromptText: (text: string) => void
 
+  // Wikipedia actions
+  searchWikipedia: () => Promise<void>
+  closeWikipediaModal: () => void
+  addSelectedWikipediaArticles: (selectedIndices: number[]) => void
+
   // Chat actions
   sendChatMessage: (message: string) => Promise<void>
   clearChatMessages: () => void
@@ -167,6 +180,10 @@ export const useConceptMapStore = create<ConceptMapStore>()(
       isExtractLoading: false,
 
       extractedTerms: [],
+
+      isWikipediaModalOpen: false,
+      isWikipediaLoading: false,
+      wikipediaResults: [],
 
       currentPromptType: null,
       currentResponse: '',
@@ -648,6 +665,98 @@ export const useConceptMapStore = create<ConceptMapStore>()(
       },
 
       setCustomPromptText: (text: string) => set({ customPromptText: text }),
+
+      // ========== WIKIPEDIA ACTIONS ==========
+
+      searchWikipedia: async () => {
+        const { selectedNodeId, nodes } = get()
+        if (!selectedNodeId) return
+
+        const selectedNode = nodes.find((n) => n.id === selectedNodeId)
+        if (!selectedNode) return
+
+        const label = getNodeLabel(selectedNode)
+        if (!label) return
+
+        set({ isWikipediaLoading: true })
+
+        try {
+          const results = await searchWikipediaApi(label)
+          set({
+            wikipediaResults: results,
+            isWikipediaModalOpen: true,
+            isWikipediaLoading: false,
+          })
+        } catch (err) {
+          console.error('Wikipedia search failed:', err)
+          set({ isWikipediaLoading: false })
+          get().addToast('Failed to search Wikipedia', 'error')
+        }
+      },
+
+      closeWikipediaModal: () => {
+        set({
+          isWikipediaModalOpen: false,
+          wikipediaResults: [],
+        })
+      },
+
+      addSelectedWikipediaArticles: (selectedIndices: number[]) => {
+        const { selectedNodeId, nodes, edges, wikipediaResults } = get()
+        if (!selectedNodeId || selectedIndices.length === 0) return
+
+        const parentNode = nodes.find((n) => n.id === selectedNodeId)
+        if (!parentNode) return
+
+        const selectedArticles = selectedIndices
+          .map((i) => wikipediaResults[i])
+          .filter(Boolean)
+
+        if (selectedArticles.length === 0) return
+
+        const positions = calculateTermNodesPositions(
+          parentNode,
+          selectedArticles.length
+        )
+
+        const newNodes = selectedArticles.map((article, index) =>
+          createWikipediaNode(
+            article.title,
+            article.extract,
+            article.pageUrl,
+            selectedNodeId,
+            positions[index]
+          )
+        )
+
+        const newEdges = newNodes.map((node) =>
+          createEdge(selectedNodeId, node.id)
+        )
+
+        const updatedNodes = nodes.map((n) =>
+          n.id === selectedNodeId
+            ? {
+                ...n,
+                data: {
+                  ...n.data,
+                  childIds: [...n.data.childIds, ...newNodes.map((node) => node.id)],
+                },
+              }
+            : n
+        )
+
+        set({
+          nodes: [...updatedNodes, ...newNodes],
+          edges: [...edges, ...newEdges],
+          isWikipediaModalOpen: false,
+          wikipediaResults: [],
+        })
+
+        get().addToast(
+          `Added ${selectedArticles.length} Wikipedia article${selectedArticles.length > 1 ? 's' : ''}`,
+          'success'
+        )
+      },
 
       // ========== CHAT ACTIONS ==========
 

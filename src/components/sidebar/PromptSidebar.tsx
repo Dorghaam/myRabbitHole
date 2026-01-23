@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { X, MessageSquare, Sparkles, Undo, Redo, ChevronDown } from 'lucide-react'
+import { X, MessageSquare, Sparkles, Undo, Redo, ChevronDown, Globe } from 'lucide-react'
 import { useConceptMapStore } from '../../store/conceptMapStore'
 import { PROMPT_CONFIG } from '../../config/prompts'
 import { PromptType } from '../../types'
@@ -17,6 +17,7 @@ export function PromptSidebar() {
     setCustomPromptText,
     difficultyLevel,
     setDifficultyLevel,
+    searchWikipedia,
   } = useConceptMapStore()
 
   const [showCustomInput, setShowCustomInput] = useState(false)
@@ -190,6 +191,15 @@ export function PromptSidebar() {
             >
               <Sparkles size={12} />
               Custom Prompt
+            </button>
+
+            {/* Wikipedia button */}
+            <button
+              onClick={() => searchWikipedia()}
+              className="w-full px-2.5 py-1.5 text-xs font-medium rounded-full bg-gray-100 text-gray-600 border-2 border-gray-800 shadow-[0_3px_0_0_#1e3a5f] hover:shadow-[0_2px_0_0_#1e3a5f] hover:translate-y-[1px] active:shadow-none active:translate-y-[3px] transition-all duration-100 flex items-center justify-center gap-1.5"
+            >
+              <Globe size={12} />
+              Wikipedia
             </button>
 
             {/* Undo / Redo row */}

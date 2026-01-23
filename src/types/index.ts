@@ -6,6 +6,7 @@ export enum NodeType {
   TOPIC = 'topic',
   CONTENT = 'content',
   TERM = 'term',
+  WIKIPEDIA = 'wikipedia',
 }
 
 // ============================================
@@ -102,10 +103,21 @@ export interface TermNodeData extends BaseNodeData {
 }
 
 // ============================================
+// WIKIPEDIA NODE
+// ============================================
+
+export interface WikipediaNodeData extends BaseNodeData {
+  type: NodeType.WIKIPEDIA
+  title: string
+  extract: string
+  pageUrl: string
+}
+
+// ============================================
 // UNION TYPE
 // ============================================
 
-export type ConceptNodeData = TopicNodeData | ContentNodeData | TermNodeData
+export type ConceptNodeData = TopicNodeData | ContentNodeData | TermNodeData | WikipediaNodeData
 
 // ============================================
 // EDGE DATA (with index signature for React Flow compatibility)

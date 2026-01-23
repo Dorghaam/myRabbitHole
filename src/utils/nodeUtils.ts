@@ -7,6 +7,7 @@ import {
   TopicNodeData,
   ContentNodeData,
   TermNodeData,
+  WikipediaNodeData,
   ConceptNodeData,
   ConceptEdgeData,
 } from '../types'
@@ -85,6 +86,33 @@ export function createTermNode(
       childIds: [],
       createdAt: new Date().toISOString(),
       promptType,
+    },
+  }
+}
+
+export function createWikipediaNode(
+  title: string,
+  extract: string,
+  pageUrl: string,
+  parentId: string,
+  position = { x: 0, y: 0 }
+): Node<WikipediaNodeData> {
+  const id = uuidv4()
+  return {
+    id,
+    type: 'wikipedia',
+    position,
+    data: {
+      id,
+      type: NodeType.WIKIPEDIA,
+      title,
+      extract,
+      pageUrl,
+      color: NodeColor.DEFAULT,
+      parentId,
+      childIds: [],
+      createdAt: new Date().toISOString(),
+      promptType: null,
     },
   }
 }
@@ -220,6 +248,8 @@ export function getNodeText(node: Node<ConceptNodeData>): string {
       return `${data.title}: ${data.content}`
     case NodeType.TERM:
       return data.definition ? `${data.term}: ${data.definition}` : data.term
+    case NodeType.WIKIPEDIA:
+      return `${data.title}: ${data.extract}`
     default:
       return ''
   }
@@ -234,6 +264,8 @@ export function getNodeLabel(node: Node<ConceptNodeData>): string {
       return data.title
     case NodeType.TERM:
       return data.term
+    case NodeType.WIKIPEDIA:
+      return data.title
     default:
       return ''
   }
