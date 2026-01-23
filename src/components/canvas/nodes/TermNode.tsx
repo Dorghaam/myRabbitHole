@@ -81,15 +81,21 @@ export const TermNode = memo(function TermNode({
         {/* Content area */}
         <div className="flex-1 min-w-0 px-4 py-3">
           {/* Category badge */}
-          <span
-            className="inline-block text-xs font-semibold uppercase px-2 py-0.5 rounded mb-1"
-            style={{
-              backgroundColor: getBadge(data.promptType).color,
-              color: 'white',
-            }}
-          >
-            {getBadge(data.promptType).label}
-          </span>
+          {data.color === 'default' ? (
+            <span
+              className="inline-block text-xs font-semibold uppercase px-2 py-0.5 rounded mb-1"
+              style={{
+                backgroundColor: getBadge(data.promptType).color,
+                color: 'white',
+              }}
+            >
+              {getBadge(data.promptType).label}
+            </span>
+          ) : (
+            <span className="inline-block text-xs font-bold uppercase mb-1 opacity-60">
+              {getBadge(data.promptType).label}
+            </span>
+          )}
           {/* Term name */}
           <h4 className="text-sm font-bold text-gray-900 break-words">
             {data.term}
