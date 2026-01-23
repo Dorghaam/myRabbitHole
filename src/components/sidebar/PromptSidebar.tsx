@@ -195,10 +195,15 @@ export function PromptSidebar() {
               Custom Prompt
             </button>
 
-            {/* Wikipedia button */}
+            {/* Wikipedia button - enabled only for Term and Topic nodes */}
             <button
               onClick={() => searchWikipedia()}
-              className="w-full px-2.5 py-1.5 text-xs font-medium rounded-full bg-gray-100 text-gray-600 border-2 border-gray-800 shadow-[0_3px_0_0_#1e3a5f] hover:shadow-[0_2px_0_0_#1e3a5f] hover:translate-y-[1px] active:shadow-none active:translate-y-[3px] transition-all duration-100 flex items-center justify-center gap-1.5"
+              disabled={selectedNode.data.type !== 'term' && selectedNode.data.type !== 'topic'}
+              className={`w-full px-2.5 py-1.5 text-xs font-medium rounded-full border-2 flex items-center justify-center gap-1.5 transition-all duration-100 ${
+                selectedNode.data.type === 'term' || selectedNode.data.type === 'topic'
+                  ? 'bg-gray-100 text-gray-600 border-gray-800 shadow-[0_3px_0_0_#1e3a5f] hover:shadow-[0_2px_0_0_#1e3a5f] hover:translate-y-[1px] active:shadow-none active:translate-y-[3px]'
+                  : 'bg-gray-50 text-gray-300 border-gray-300 cursor-not-allowed'
+              }`}
             >
               <Globe size={12} />
               Wikipedia
