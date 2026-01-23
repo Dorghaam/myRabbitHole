@@ -9,12 +9,15 @@ type ContentNodeProps = NodeProps & {
   data: ContentNodeData
 }
 
+const CONTENT_CHAR_LIMIT = 800
+
 export const ContentNode = memo(function ContentNode({
   data,
   selected,
 }: ContentNodeProps) {
   const { selectNode, openColorPicker, deleteNode, openReader } = useConceptMapStore()
   const [showMenu, setShowMenu] = useState(false)
+  const [expanded, setExpanded] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -72,12 +75,12 @@ export const ContentNode = memo(function ContentNode({
             : `6px 6px 0 0 ${colors.border}`,
         }}
       >
-        {/* Content area - width adjusts based on content length */}
+        {/* Content area */}
         <div
           className="p-4 flex-1"
           style={{
-            width: data.content && data.content.length > 500 ? '300px' : '240px',
-            maxWidth: '320px'
+            width: '350px',
+            maxWidth: '380px'
           }}
         >
           <h3 className="text-lg font-bold text-gray-900 mb-3">
@@ -85,8 +88,18 @@ export const ContentNode = memo(function ContentNode({
           </h3>
           <div>
             <p className="text-sm text-gray-600 leading-relaxed">
-              {data.content}
+              {!expanded && data.content.length > CONTENT_CHAR_LIMIT
+                ? data.content.slice(0, CONTENT_CHAR_LIMIT) + '...'
+                : data.content}
             </p>
+            {data.content.length > CONTENT_CHAR_LIMIT && (
+              <button
+                onClick={(e) => { e.stopPropagation(); setExpanded(!expanded) }}
+                className="mt-2 text-sm font-bold text-gray-500 hover:text-gray-800 transition-colors nodrag"
+              >
+                {expanded ? 'See Less' : 'See More...'}
+              </button>
+            )}
           </div>
         </div>
 
