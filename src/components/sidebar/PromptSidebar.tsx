@@ -10,6 +10,7 @@ const DIFFICULTY_LABELS = ['ELI5', 'Middle School', 'High School', 'Undergrad', 
 export function PromptSidebar() {
   const {
     selectedNodeId,
+    compareNodeId,
     nodes,
     selectNode,
     generateResponse,
@@ -18,6 +19,8 @@ export function PromptSidebar() {
     difficultyLevel,
     setDifficultyLevel,
     searchWikipedia,
+    undo,
+    redo,
   } = useConceptMapStore()
 
   const [showCustomInput, setShowCustomInput] = useState(false)
@@ -42,6 +45,12 @@ export function PromptSidebar() {
   const nodeLabel = getNodeLabel(selectedNode)
   const truncatedLabel =
     nodeLabel.length > 25 ? nodeLabel.slice(0, 25) + '...' : nodeLabel
+
+  const compareNode = compareNodeId ? nodes.find((n) => n.id === compareNodeId) : null
+  const compareLabel = compareNode ? getNodeLabel(compareNode) : null
+  const truncatedCompareLabel = compareLabel
+    ? (compareLabel.length > 20 ? compareLabel.slice(0, 20) + '...' : compareLabel)
+    : null
 
   const handlePromptClick = (type: PromptType) => {
     if (type === PromptType.CUSTOM) {
@@ -91,6 +100,15 @@ export function PromptSidebar() {
           <X size={16} />
         </button>
       </div>
+
+      {/* Compare indicator */}
+      {truncatedCompareLabel && (
+        <div className="px-3 pb-1">
+          <span className="text-xs text-purple-600 font-medium">
+            + "{truncatedCompareLabel}"
+          </span>
+        </div>
+      )}
 
       {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto px-3 py-1 bg-transparent">
@@ -154,25 +172,9 @@ export function PromptSidebar() {
               )}
             </div>
 
-            {/* Add New button - pink + What */}
-            <div className="grid grid-cols-2 gap-1.5">
-              <button
-                onClick={() => handlePromptClick(PromptType.WHAT)}
-                className="px-2.5 py-1.5 text-xs font-medium rounded-full bg-pink-500 text-white border-2 border-pink-600 shadow-[0_3px_0_0_#9d174d] hover:shadow-[0_2px_0_0_#9d174d] hover:translate-y-[1px] active:shadow-none active:translate-y-[3px] transition-all duration-100"
-              >
-                Add New
-              </button>
-              <button
-                onClick={() => handlePromptClick(PromptType.WHAT)}
-                className={pillButtonStyle}
-              >
-                What
-              </button>
-            </div>
-
             {/* Prompt buttons grid */}
             <div className="grid grid-cols-2 gap-1.5">
-              {promptButtons.slice(1).map((config) => (
+              {promptButtons.map((config) => (
                 <button
                   key={config.type}
                   onClick={() => handlePromptClick(config.type)}
@@ -204,11 +206,17 @@ export function PromptSidebar() {
 
             {/* Undo / Redo row */}
             <div className="grid grid-cols-2 gap-1.5">
-              <button className={`${pillButtonStyle} flex items-center justify-center gap-1`}>
+              <button
+                onClick={() => undo()}
+                className={`${pillButtonStyle} flex items-center justify-center gap-1`}
+              >
                 <Undo size={12} />
                 Undo
               </button>
-              <button className={`${pillButtonStyle} flex items-center justify-center gap-1`}>
+              <button
+                onClick={() => redo()}
+                className={`${pillButtonStyle} flex items-center justify-center gap-1`}
+              >
                 <Redo size={12} />
                 Redo
               </button>

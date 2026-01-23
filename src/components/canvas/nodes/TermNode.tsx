@@ -1,9 +1,24 @@
 import { memo, useState, useRef, useEffect } from 'react'
 import { Handle, Position, type NodeProps } from '@xyflow/react'
 import { MoreVertical, Settings, Trash2 } from 'lucide-react'
-import { TermNodeData } from '../../../types'
+import { TermNodeData, PromptType } from '../../../types'
 import { useConceptMapStore } from '../../../store/conceptMapStore'
 import { getNodeColors } from '../../../config/colors'
+
+const BADGE_CONFIG: Record<string, { label: string; color: string }> = {
+  [PromptType.EXTRACT]: { label: 'TERMS', color: '#EC4899' },
+  [PromptType.CONCEPTS]: { label: 'CONCEPTS', color: '#8B5CF6' },
+  [PromptType.QUESTIONS]: { label: 'QUESTIONS', color: '#F59E0B' },
+  [PromptType.FIGURES]: { label: 'KEY FIGURES', color: '#10B981' },
+  [PromptType.SPLIT]: { label: 'COMPONENTS', color: '#6366F1' },
+}
+
+function getBadge(promptType: PromptType | null) {
+  if (promptType && BADGE_CONFIG[promptType]) {
+    return BADGE_CONFIG[promptType]
+  }
+  return { label: 'TERMS', color: '#EC4899' }
+}
 
 type TermNodeProps = NodeProps & {
   data: TermNodeData
@@ -27,8 +42,8 @@ export const TermNode = memo(function TermNode({
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [showMenu])
 
-  const handleClick = () => {
-    selectNode(data.id)
+  const handleClick = (e: React.MouseEvent) => {
+    selectNode(data.id, e.shiftKey)
   }
 
   const handleMenuClick = (e: React.MouseEvent) => {
@@ -65,15 +80,15 @@ export const TermNode = memo(function TermNode({
       >
         {/* Content area */}
         <div className="flex-1 min-w-0 px-4 py-3">
-          {/* Pink TERMS badge */}
+          {/* Category badge */}
           <span
             className="inline-block text-xs font-semibold uppercase px-2 py-0.5 rounded mb-1"
             style={{
-              backgroundColor: '#EC4899',
+              backgroundColor: getBadge(data.promptType).color,
               color: 'white',
             }}
           >
-            TERMS
+            {getBadge(data.promptType).label}
           </span>
           {/* Term name */}
           <h4 className="text-sm font-bold text-gray-900 break-words">

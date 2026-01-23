@@ -127,12 +127,13 @@ No other text, just the JSON array.`,
   {
     type: PromptType.COMPARE,
     label: 'Compare',
-    description: 'Compare with similar concepts',
+    description: 'Compare two selected nodes',
     generatesTerms: false,
-    systemPrompt: `Compare the given topic with similar or related concepts.
-Highlight similarities and differences.
+    systemPrompt: `Compare the two given topics (Topic A and Topic B).
+Highlight their key similarities and differences.
+Explain what makes each unique and where they overlap.
 Write in flowing prose, no bullet points.
-Maximum 150 words.`,
+Maximum 200 words.`,
   },
   {
     type: PromptType.ANALOGY,
@@ -214,29 +215,20 @@ Return ONLY a valid JSON array with 4-6 items in this exact format:
 No other text, just the JSON array.`,
   },
 
-  // ========== DECOMPOSITION ==========
+  // ========== KEY FIGURES ==========
   {
-    type: PromptType.SPLIT,
-    label: 'Split',
-    description: 'Break into sub-components',
+    type: PromptType.FIGURES,
+    label: 'Key Figures',
+    description: 'Key people, inventors, and innovators',
     generatesTerms: true,
-    systemPrompt: `Break down the given topic into its main sub-components or parts.
-Return ONLY a valid JSON array with 3-6 items in this exact format:
+    systemPrompt: `Identify the most important people, inventors, innovators, scientists, thinkers, or key figures associated with the given topic.
+Include people who created, discovered, developed, or significantly contributed to this field or concept.
+Return ONLY a valid JSON array with 4-6 items in this exact format:
 [
-  {"name": "Component Name", "description": "Brief 5-10 word description"},
+  {"name": "Person Name", "description": "Their key contribution in 5-10 words"},
   ...
 ]
 No other text, just the JSON array.`,
-  },
-  {
-    type: PromptType.JOIN,
-    label: 'Join',
-    description: 'Connect to broader context',
-    generatesTerms: false,
-    systemPrompt: `Explain how the given topic connects to broader themes, fields, or contexts.
-What is it part of? What does it relate to?
-Write in flowing prose, no bullet points.
-Maximum 150 words.`,
   },
 
   // ========== CUSTOM ==========

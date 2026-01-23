@@ -30,8 +30,8 @@ export const ContentNode = memo(function ContentNode({
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [showMenu])
 
-  const handleClick = () => {
-    selectNode(data.id)
+  const handleClick = (e: React.MouseEvent) => {
+    selectNode(data.id, e.shiftKey)
   }
 
   const handleDoubleClick = (e: React.MouseEvent) => {

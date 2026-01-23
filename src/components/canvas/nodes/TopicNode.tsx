@@ -27,8 +27,8 @@ export const TopicNode = memo(function TopicNode({
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [showMenu])
 
-  const handleClick = () => {
-    selectNode(data.id)
+  const handleClick = (e: React.MouseEvent) => {
+    selectNode(data.id, e.shiftKey)
   }
 
   const handleMenuClick = (e: React.MouseEvent) => {

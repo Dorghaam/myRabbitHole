@@ -35,6 +35,7 @@ export enum PromptType {
   QUESTIONS = 'questions',
   SPLIT = 'split',
   JOIN = 'join',
+  FIGURES = 'figures',
   CUSTOM = 'custom',
 }
 

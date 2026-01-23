@@ -47,6 +47,11 @@ interface ConceptMapStore {
 
   // Selection
   selectedNodeId: string | null
+  compareNodeId: string | null
+
+  // History (Undo/Redo)
+  undoStack: Array<{ nodes: Node<ConceptNodeData>[]; edges: Edge<ConceptEdgeData>[] }>
+  redoStack: Array<{ nodes: Node<ConceptNodeData>[]; edges: Edge<ConceptEdgeData>[] }>
 
   // UI State
   isSidebarOpen: boolean
@@ -92,7 +97,10 @@ interface ConceptMapStore {
 
   // Actions
   setTopic: (topic: string) => void
-  selectNode: (nodeId: string | null) => void
+  selectNode: (nodeId: string | null, shiftKey?: boolean) => void
+  pushHistory: () => void
+  undo: () => void
+  redo: () => void
   generateResponse: (
     promptType: PromptType,
     customPrompt?: string
@@ -169,6 +177,10 @@ export const useConceptMapStore = create<ConceptMapStore>()(
       edges: [],
 
       selectedNodeId: null,
+      compareNodeId: null,
+
+      undoStack: [],
+      redoStack: [],
 
       isSidebarOpen: false,
       isResponseModalOpen: false,
@@ -217,10 +229,59 @@ export const useConceptMapStore = create<ConceptMapStore>()(
         })
       },
 
-      selectNode: (nodeId: string | null) => {
+      selectNode: (nodeId: string | null, shiftKey?: boolean) => {
+        if (shiftKey && nodeId && get().selectedNodeId && nodeId !== get().selectedNodeId) {
+          // Shift-click: set as compare node
+          set({ compareNodeId: nodeId })
+        } else {
+          set({
+            selectedNodeId: nodeId,
+            compareNodeId: null,
+            isSidebarOpen: nodeId !== null,
+          })
+        }
+      },
+
+      pushHistory: () => {
+        const { nodes, edges, undoStack } = get()
+        const snapshot = {
+          nodes: JSON.parse(JSON.stringify(nodes)),
+          edges: JSON.parse(JSON.stringify(edges)),
+        }
+        const newStack = [...undoStack, snapshot]
+        if (newStack.length > 50) newStack.shift()
+        set({ undoStack: newStack, redoStack: [] })
+      },
+
+      undo: () => {
+        const { nodes, edges, undoStack, redoStack } = get()
+        if (undoStack.length === 0) return
+        const prev = undoStack[undoStack.length - 1]
+        const currentSnapshot = {
+          nodes: JSON.parse(JSON.stringify(nodes)),
+          edges: JSON.parse(JSON.stringify(edges)),
+        }
         set({
-          selectedNodeId: nodeId,
-          isSidebarOpen: nodeId !== null,
+          nodes: prev.nodes,
+          edges: prev.edges,
+          undoStack: undoStack.slice(0, -1),
+          redoStack: [...redoStack, currentSnapshot],
+        })
+      },
+
+      redo: () => {
+        const { nodes, edges, undoStack, redoStack } = get()
+        if (redoStack.length === 0) return
+        const next = redoStack[redoStack.length - 1]
+        const currentSnapshot = {
+          nodes: JSON.parse(JSON.stringify(nodes)),
+          edges: JSON.parse(JSON.stringify(edges)),
+        }
+        set({
+          nodes: next.nodes,
+          edges: next.edges,
+          undoStack: [...undoStack, currentSnapshot],
+          redoStack: redoStack.slice(0, -1),
         })
       },
 
@@ -230,12 +291,18 @@ export const useConceptMapStore = create<ConceptMapStore>()(
         promptType: PromptType,
         customPrompt?: string
       ) => {
-        const { selectedNodeId, nodes, apiKey, difficultyLevel } = get()
+        const { selectedNodeId, compareNodeId, nodes, apiKey, difficultyLevel } = get()
         if (!selectedNodeId) return
 
         if (!apiKey) {
           set({ isApiKeyModalOpen: true })
           get().addToast('Please add your Gemini API key', 'error')
+          return
+        }
+
+        // Compare requires 2 nodes
+        if (promptType === PromptType.COMPARE && !compareNodeId) {
+          get().addToast('Hold Shift and click a second node, then click Compare again', 'info')
           return
         }
 
@@ -255,6 +322,15 @@ export const useConceptMapStore = create<ConceptMapStore>()(
         ]
         const difficultyPrefix = `Difficulty level: ${DIFFICULTY_LABELS[difficultyLevel]}\n\n`
 
+        // Build node text (handle compare with 2 nodes)
+        let nodeText = getNodeText(selectedNode)
+        if (promptType === PromptType.COMPARE && compareNodeId) {
+          const compareNode = nodes.find((n) => n.id === compareNodeId)
+          if (compareNode) {
+            nodeText = `Topic A: ${getNodeText(selectedNode)}\n\nTopic B: ${getNodeText(compareNode)}`
+          }
+        }
+
         // For term-generating prompts, skip ResponseModal and show bottom loading
         if (config.generatesTerms) {
           set({
@@ -264,7 +340,6 @@ export const useConceptMapStore = create<ConceptMapStore>()(
           })
 
           try {
-            const nodeText = getNodeText(selectedNode)
             const service = new GeminiService(apiKey)
             let fullResponse = ''
 
@@ -300,7 +375,6 @@ export const useConceptMapStore = create<ConceptMapStore>()(
           })
 
           try {
-            const nodeText = getNodeText(selectedNode)
             let prompt = difficultyPrefix + config.systemPrompt
 
             if (promptType === PromptType.CUSTOM && customPrompt) {
@@ -330,6 +404,7 @@ export const useConceptMapStore = create<ConceptMapStore>()(
       },
 
       addNodeFromResponse: () => {
+        get().pushHistory()
         const {
           selectedNodeId,
           nodes,
@@ -413,6 +488,7 @@ export const useConceptMapStore = create<ConceptMapStore>()(
       },
 
       deleteNode: (nodeId: string) => {
+        get().pushHistory()
         const { nodes, edges } = get()
 
         // Can't delete root node
@@ -602,6 +678,7 @@ export const useConceptMapStore = create<ConceptMapStore>()(
         set({ isReaderOpen: false, readerTitle: '', readerContent: '' }),
 
       addSelectedTerms: (selectedIndices: number[]) => {
+        get().pushHistory()
         const { selectedNodeId, nodes, edges, extractedTerms, currentPromptType } =
           get()
         if (!selectedNodeId || selectedIndices.length === 0) return
@@ -702,6 +779,7 @@ export const useConceptMapStore = create<ConceptMapStore>()(
       },
 
       addSelectedWikipediaArticles: (selectedIndices: number[]) => {
+        get().pushHistory()
         const { selectedNodeId, nodes, edges, wikipediaResults } = get()
         if (!selectedNodeId || selectedIndices.length === 0) return
 
