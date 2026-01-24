@@ -7,6 +7,7 @@ export enum NodeType {
   CONTENT = 'content',
   TERM = 'term',
   WIKIPEDIA = 'wikipedia',
+  BOOK = 'book',
 }
 
 // ============================================
@@ -36,6 +37,7 @@ export enum PromptType {
   SPLIT = 'split',
   JOIN = 'join',
   FIGURES = 'figures',
+  BOOKS = 'books',
   CUSTOM = 'custom',
 }
 
@@ -116,10 +118,22 @@ export interface WikipediaNodeData extends BaseNodeData {
 }
 
 // ============================================
+// BOOK NODE
+// ============================================
+
+export interface BookNodeData extends BaseNodeData {
+  type: NodeType.BOOK
+  title: string
+  author: string
+  coverUrl: string | null
+  description: string
+}
+
+// ============================================
 // UNION TYPE
 // ============================================
 
-export type ConceptNodeData = TopicNodeData | ContentNodeData | TermNodeData | WikipediaNodeData
+export type ConceptNodeData = TopicNodeData | ContentNodeData | TermNodeData | WikipediaNodeData | BookNodeData
 
 // ============================================
 // EDGE DATA (with index signature for React Flow compatibility)
@@ -164,6 +178,7 @@ export interface PromptConfig {
   description: string
   generatesTerms: boolean
   generatesContentFromTerms?: boolean
+  generatesBookNodes?: boolean
   isLocked?: boolean
   systemPrompt: string
 }

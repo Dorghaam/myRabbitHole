@@ -5,6 +5,7 @@
 export interface TermItem {
   name: string
   description?: string
+  author?: string
 }
 
 /**
@@ -32,6 +33,9 @@ export function parseTermsFromResponse(response: string): TermItem[] {
         name: String(item.name).trim(),
         description: item.description
           ? String(item.description).trim()
+          : undefined,
+        author: item.author
+          ? String(item.author).trim()
           : undefined,
       }))
   } catch (error) {

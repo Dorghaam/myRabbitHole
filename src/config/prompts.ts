@@ -232,6 +232,22 @@ Return ONLY a valid JSON array with 4-6 items in this exact format:
 No other text, just the JSON array.`,
   },
 
+  // ========== BOOKS ==========
+  {
+    type: PromptType.BOOKS,
+    label: 'Books',
+    description: 'Book recommendations',
+    generatesTerms: true,
+    generatesBookNodes: true,
+    systemPrompt: `Recommend books related to the given topic that would help someone learn more about it.
+Return ONLY a valid JSON array with 4-6 items in this exact format:
+[
+  {"name": "Book Title", "author": "Author Name", "description": "Why this book is relevant in 10-15 words"},
+  ...
+]
+No other text, just the JSON array.`,
+  },
+
   // ========== CUSTOM ==========
   {
     type: PromptType.CUSTOM,

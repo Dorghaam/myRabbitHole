@@ -8,6 +8,7 @@ import {
   ContentNodeData,
   TermNodeData,
   WikipediaNodeData,
+  BookNodeData,
   ConceptNodeData,
   ConceptEdgeData,
 } from '../types'
@@ -117,6 +118,35 @@ export function createWikipediaNode(
   }
 }
 
+export function createBookNode(
+  title: string,
+  author: string,
+  coverUrl: string | null,
+  description: string,
+  parentId: string,
+  position = { x: 0, y: 0 }
+): Node<BookNodeData> {
+  const id = uuidv4()
+  return {
+    id,
+    type: 'book',
+    position,
+    data: {
+      id,
+      type: NodeType.BOOK,
+      title,
+      author,
+      coverUrl,
+      description,
+      color: NodeColor.DEFAULT,
+      parentId,
+      childIds: [],
+      createdAt: new Date().toISOString(),
+      promptType: PromptType.BOOKS,
+    },
+  }
+}
+
 // ============================================
 // EDGE CREATION
 // ============================================
@@ -151,6 +181,7 @@ const CONTENT_NODE_WIDTH = 280
 const CONTENT_NODE_HEIGHT = 200
 const TERM_NODE_WIDTH = 240
 const TERM_NODE_HEIGHT = 80
+const BOOK_NODE_WIDTH = 220
 const VERTICAL_GAP = 80
 const HORIZONTAL_GAP = 30
 
@@ -272,6 +303,43 @@ export function calculateContentNodesPositions(
   return positions
 }
 
+export function calculateBookNodesPositions(
+  parentNode: Node<ConceptNodeData>,
+  bookCount: number
+): { x: number; y: number }[] {
+  const parentX = parentNode.position.x
+  const parentY = parentNode.position.y
+
+  const measuredHeight = (parentNode as any).measured?.height
+  let parentHeight: number
+  if (measuredHeight) {
+    parentHeight = measuredHeight
+  } else if (parentNode.type === 'content') {
+    parentHeight = CONTENT_NODE_HEIGHT
+  } else if (parentNode.type === 'term') {
+    parentHeight = TERM_NODE_HEIGHT
+  } else {
+    parentHeight = 50
+  }
+
+  const y = parentY + parentHeight + VERTICAL_GAP
+
+  const totalWidth =
+    bookCount * BOOK_NODE_WIDTH + (bookCount - 1) * HORIZONTAL_GAP
+
+  const startX = parentX - totalWidth / 2 + BOOK_NODE_WIDTH / 2
+
+  const positions: { x: number; y: number }[] = []
+  for (let i = 0; i < bookCount; i++) {
+    positions.push({
+      x: startX + i * (BOOK_NODE_WIDTH + HORIZONTAL_GAP),
+      y,
+    })
+  }
+
+  return positions
+}
+
 // ============================================
 // NODE TEXT EXTRACTION
 // ============================================
@@ -287,6 +355,8 @@ export function getNodeText(node: Node<ConceptNodeData>): string {
       return data.definition ? `${data.term}: ${data.definition}` : data.term
     case NodeType.WIKIPEDIA:
       return `${data.title}: ${data.extract}`
+    case NodeType.BOOK:
+      return `${data.title} by ${data.author}: ${data.description}`
     default:
       return ''
   }
@@ -302,6 +372,8 @@ export function getNodeLabel(node: Node<ConceptNodeData>): string {
     case NodeType.TERM:
       return data.term
     case NodeType.WIKIPEDIA:
+      return data.title
+    case NodeType.BOOK:
       return data.title
     default:
       return ''

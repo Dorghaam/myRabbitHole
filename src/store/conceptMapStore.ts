@@ -18,10 +18,12 @@ import {
   createContentNode,
   createTermNode,
   createWikipediaNode,
+  createBookNode,
   createEdge,
   calculateChildPosition,
   calculateTermNodesPositions,
   calculateContentNodesPositions,
+  calculateBookNodesPositions,
   getNodeText,
   getNodeLabel,
   getAllDescendantIds,
@@ -31,6 +33,7 @@ import { parseTermsFromResponse, stripMarkdown, TermItem } from '../utils/parseU
 import { GeminiService } from '../services/geminiService'
 import { storageService } from '../services/storageService'
 import { searchWikipedia as searchWikipediaApi, WikipediaSearchResult } from '../services/wikipediaService'
+import { searchBookCover } from '../services/bookService'
 
 // ============================================
 // STORE INTERFACE
@@ -772,6 +775,70 @@ export const useConceptMapStore = create<ConceptMapStore>()(
           } catch (error) {
             console.error('Answer generation error:', error)
             const errorMessage = error instanceof Error ? error.message : 'Failed to generate answers'
+            get().addToast(errorMessage, 'error')
+          } finally {
+            set({ isExtractLoading: false })
+          }
+          return
+        }
+
+        // Books flow: fetch covers and create book nodes
+        if (config?.generatesBookNodes) {
+          set({ isExtractModalOpen: false, isExtractLoading: true })
+
+          try {
+            // Fetch covers from Open Library for each selected book
+            const coverUrls: (string | null)[] = []
+            for (const term of selectedTerms) {
+              const coverUrl = await searchBookCover(term.name, term.author)
+              coverUrls.push(coverUrl)
+            }
+
+            const { nodes: currentNodes, edges: currentEdges } = get()
+            const positions = calculateBookNodesPositions(parentNode, selectedTerms.length)
+
+            const newNodes = selectedTerms.map((term, index) =>
+              createBookNode(
+                term.name,
+                term.author || 'Unknown Author',
+                coverUrls[index],
+                term.description || '',
+                selectedNodeId,
+                positions[index]
+              )
+            )
+
+            const newEdges = newNodes.map((node) =>
+              createEdge(selectedNodeId, node.id)
+            )
+
+            const updatedNodes = currentNodes.map((n) =>
+              n.id === selectedNodeId
+                ? {
+                    ...n,
+                    data: {
+                      ...n.data,
+                      childIds: [...n.data.childIds, ...newNodes.map((node) => node.id)],
+                    },
+                  }
+                : n
+            )
+
+            set({
+              nodes: [...updatedNodes, ...newNodes],
+              edges: [...currentEdges, ...newEdges],
+              extractedTerms: [],
+              currentResponse: '',
+              currentPromptType: null,
+            })
+
+            get().addToast(
+              `Added ${selectedTerms.length} book${selectedTerms.length > 1 ? 's' : ''} to concept map`,
+              'success'
+            )
+          } catch (error) {
+            console.error('Book cover fetch error:', error)
+            const errorMessage = error instanceof Error ? error.message : 'Failed to fetch book covers'
             get().addToast(errorMessage, 'error')
           } finally {
             set({ isExtractLoading: false })

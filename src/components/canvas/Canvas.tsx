@@ -8,7 +8,7 @@ import {
   type NodeTypes,
 } from '@xyflow/react'
 import { useConceptMapStore } from '../../store/conceptMapStore'
-import { TopicNode, ContentNode, TermNode, WikipediaNode } from './nodes'
+import { TopicNode, ContentNode, TermNode, WikipediaNode, BookNode } from './nodes'
 
 // Define custom node types
 const nodeTypes: NodeTypes = {
@@ -16,6 +16,7 @@ const nodeTypes: NodeTypes = {
   content: ContentNode,
   term: TermNode,
   wikipedia: WikipediaNode,
+  book: BookNode,
 }
 
 export function Canvas() {
