@@ -614,12 +614,14 @@ export const useConceptMapStore = create<ConceptMapStore>()(
 
         const promptType = targetNode.data.promptType
         const nodeType = targetNode.data.type
+        const parentId = targetNode.data.parentId
 
         set((state) => ({
           nodes: state.nodes.map((n) => {
+            const isSameParent = n.data.parentId === parentId
             const isSimilar =
-              n.data.promptType === promptType && promptType !== null
-            const isSameType = n.data.type === nodeType
+              isSameParent && n.data.promptType === promptType && promptType !== null
+            const isSameType = isSameParent && n.data.type === nodeType
             return isSimilar || (promptType === null && isSameType)
               ? { ...n, data: { ...n.data, color } }
               : n
