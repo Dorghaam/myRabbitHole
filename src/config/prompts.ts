@@ -204,8 +204,9 @@ Maximum 120 words.`,
   {
     type: PromptType.QUESTIONS,
     label: 'Questions',
-    description: 'Thought-provoking questions',
+    description: 'Thought-provoking questions with answers',
     generatesTerms: true,
+    generatesContentFromTerms: true,
     systemPrompt: `Generate thought-provoking questions about the given topic that encourage deeper exploration.
 Return ONLY a valid JSON array with 4-6 items in this exact format:
 [

@@ -21,6 +21,7 @@ import {
   createEdge,
   calculateChildPosition,
   calculateTermNodesPositions,
+  calculateContentNodesPositions,
   getNodeText,
   getNodeLabel,
   getAllDescendantIds,
@@ -127,7 +128,7 @@ interface ConceptMapStore {
   closeExtractModal: () => void
   openReader: (title: string, content: string) => void
   closeReader: () => void
-  addSelectedTerms: (selectedIndices: number[]) => void
+  addSelectedTerms: (selectedIndices: number[]) => Promise<void>
   setCustomPromptText: (text: string) => void
 
   // Wikipedia actions
@@ -456,6 +457,9 @@ export const useConceptMapStore = create<ConceptMapStore>()(
             position
           )
 
+          // Informational content nodes get a subtle grey tint
+          newNode.data.color = NodeColor.GREY
+
           newNodes = [newNode]
           newEdges = [createEdge(selectedNodeId, newNode.id)]
         }
@@ -679,14 +683,16 @@ export const useConceptMapStore = create<ConceptMapStore>()(
       closeReader: () =>
         set({ isReaderOpen: false, readerTitle: '', readerContent: '' }),
 
-      addSelectedTerms: (selectedIndices: number[]) => {
+      addSelectedTerms: async (selectedIndices: number[]) => {
         get().pushHistory()
-        const { selectedNodeId, nodes, edges, extractedTerms, currentPromptType } =
+        const { selectedNodeId, nodes, edges, extractedTerms, currentPromptType, apiKey, difficultyLevel } =
           get()
         if (!selectedNodeId || selectedIndices.length === 0) return
 
         const parentNode = nodes.find((n) => n.id === selectedNodeId)
         if (!parentNode) return
+
+        const config = currentPromptType ? getPromptConfig(currentPromptType) : null
 
         // Get only the selected terms
         const selectedTerms = selectedIndices
@@ -695,6 +701,85 @@ export const useConceptMapStore = create<ConceptMapStore>()(
 
         if (selectedTerms.length === 0) return
 
+        // Questions flow: generate answers and create content nodes
+        if (config?.generatesContentFromTerms && apiKey) {
+          set({ isExtractModalOpen: false, isExtractLoading: true })
+
+          try {
+            const service = new GeminiService(apiKey)
+            const DIFFICULTY_LABELS = [
+              'Explain as if to a 5-year-old child. Use very simple words and analogies.',
+              'Explain at a middle school level. Use simple language suitable for a 12-year-old.',
+              'Explain at a high school level. Use clear language appropriate for a teenager.',
+              'Explain at an undergraduate university level. Use proper terminology.',
+              'Explain at an expert/graduate level. Use advanced terminology and assume deep knowledge.',
+            ]
+            const difficultyPrefix = `Difficulty level: ${DIFFICULTY_LABELS[difficultyLevel]}\n\n`
+
+            const answerPrompt = `${difficultyPrefix}Answer the following question about the topic in detail. Be comprehensive but concise. Maximum 200 words.`
+            const parentText = getNodeText(parentNode)
+
+            // Generate answers for each selected question
+            const answers: string[] = []
+            for (const term of selectedTerms) {
+              const userContent = `Topic context: ${parentText}\n\nQuestion: ${term.name}`
+              const answer = await service.generate(answerPrompt, userContent)
+              answers.push(stripMarkdown(answer))
+            }
+
+            // Re-read current state after async operations
+            const { nodes: currentNodes, edges: currentEdges } = get()
+            const positions = calculateContentNodesPositions(parentNode, selectedTerms.length)
+
+            const newNodes = selectedTerms.map((term, index) =>
+              createContentNode(
+                term.name,
+                answers[index],
+                selectedNodeId,
+                currentPromptType || PromptType.QUESTIONS,
+                positions[index]
+              )
+            )
+
+            const newEdges = newNodes.map((node) =>
+              createEdge(selectedNodeId, node.id)
+            )
+
+            const updatedNodes = currentNodes.map((n) =>
+              n.id === selectedNodeId
+                ? {
+                    ...n,
+                    data: {
+                      ...n.data,
+                      childIds: [...n.data.childIds, ...newNodes.map((node) => node.id)],
+                    },
+                  }
+                : n
+            )
+
+            set({
+              nodes: [...updatedNodes, ...newNodes],
+              edges: [...currentEdges, ...newEdges],
+              extractedTerms: [],
+              currentResponse: '',
+              currentPromptType: null,
+            })
+
+            get().addToast(
+              `Added ${selectedTerms.length} answered question${selectedTerms.length > 1 ? 's' : ''} to concept map`,
+              'success'
+            )
+          } catch (error) {
+            console.error('Answer generation error:', error)
+            const errorMessage = error instanceof Error ? error.message : 'Failed to generate answers'
+            get().addToast(errorMessage, 'error')
+          } finally {
+            set({ isExtractLoading: false })
+          }
+          return
+        }
+
+        // Default flow: create term nodes
         const positions = calculateTermNodesPositions(
           parentNode,
           selectedTerms.length

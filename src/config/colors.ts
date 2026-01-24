@@ -14,6 +14,12 @@ export const NODE_COLORS: Record<NodeColor, ColorConfig> = {
     name: 'Default',
     accent: '#1e3a5f',
   },
+  [NodeColor.GREY]: {
+    bg: '#F5F5F7',
+    border: '#1e3a5f',
+    name: 'Grey',
+    accent: '#6B7280',
+  },
   [NodeColor.PURPLE]: {
     bg: '#C4B5FD',
     border: '#1e3a5f',

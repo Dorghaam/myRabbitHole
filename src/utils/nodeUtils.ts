@@ -235,6 +235,43 @@ export function calculateTermNodesPositions(
   return positions
 }
 
+export function calculateContentNodesPositions(
+  parentNode: Node<ConceptNodeData>,
+  contentCount: number
+): { x: number; y: number }[] {
+  const parentX = parentNode.position.x
+  const parentY = parentNode.position.y
+
+  const measuredHeight = (parentNode as any).measured?.height
+  let parentHeight: number
+  if (measuredHeight) {
+    parentHeight = measuredHeight
+  } else if (parentNode.type === 'content') {
+    parentHeight = CONTENT_NODE_HEIGHT
+  } else if (parentNode.type === 'term') {
+    parentHeight = TERM_NODE_HEIGHT
+  } else {
+    parentHeight = 50
+  }
+
+  const y = parentY + parentHeight + VERTICAL_GAP
+
+  const totalWidth =
+    contentCount * CONTENT_NODE_WIDTH + (contentCount - 1) * HORIZONTAL_GAP
+
+  const startX = parentX - totalWidth / 2 + CONTENT_NODE_WIDTH / 2
+
+  const positions: { x: number; y: number }[] = []
+  for (let i = 0; i < contentCount; i++) {
+    positions.push({
+      x: startX + i * (CONTENT_NODE_WIDTH + HORIZONTAL_GAP),
+      y,
+    })
+  }
+
+  return positions
+}
+
 // ============================================
 // NODE TEXT EXTRACTION
 // ============================================

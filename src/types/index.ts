@@ -45,6 +45,7 @@ export enum PromptType {
 
 export enum NodeColor {
   DEFAULT = 'default',
+  GREY = 'grey',
   PINK = 'pink',
   PURPLE = 'purple',
   BLUE = 'blue',
@@ -162,6 +163,7 @@ export interface PromptConfig {
   icon?: string
   description: string
   generatesTerms: boolean
+  generatesContentFromTerms?: boolean
   isLocked?: boolean
   systemPrompt: string
 }
