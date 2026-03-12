@@ -4,7 +4,6 @@ import {
   Save,
   FolderOpen,
   Download,
-  Key,
 } from 'lucide-react'
 import { useConceptMapStore } from '../../store/conceptMapStore'
 import { Button } from '../common/Button'
@@ -17,7 +16,6 @@ export function Header() {
     saveProject,
     openLoadModal,
     exportJSON,
-    openApiKeyModal,
     nodes,
   } = useConceptMapStore()
 
@@ -130,17 +128,6 @@ export function Header() {
         >
           <FolderOpen size={16} className="mr-1" />
           <span className="hidden sm:inline">Load</span>
-        </Button>
-
-        <div className="w-px h-6 bg-divider" />
-
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={openApiKeyModal}
-          title="API Key Settings"
-        >
-          <Key size={16} />
         </Button>
       </div>
     </header>

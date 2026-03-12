@@ -6,7 +6,6 @@ import { PromptSidebar } from './components/sidebar/PromptSidebar'
 import { TopicInput } from './components/topic-input/TopicInput'
 import { ResponseModal } from './components/modals/ResponseModal'
 import { ColorPickerModal } from './components/modals/ColorPickerModal'
-import { ApiKeyModal } from './components/modals/ApiKeyModal'
 import { LoadModal } from './components/modals/LoadModal'
 import { ChatModal } from './components/modals/ChatModal'
 import { ExtractSelectionModal } from './components/modals/ExtractSelectionModal'
@@ -40,7 +39,6 @@ function App() {
         {/* Modals */}
         <ResponseModal />
         <ColorPickerModal />
-        <ApiKeyModal />
         <LoadModal />
         <ChatModal />
         <ExtractSelectionModal />

@@ -3,62 +3,35 @@
 // ============================================
 
 export class GeminiService {
-  private apiKey: string
-  private model: string = 'gemini-2.0-flash'
-  private baseUrl =
-    'https://generativelanguage.googleapis.com/v1beta/models'
-
-  constructor(apiKey: string) {
-    this.apiKey = apiKey
-  }
+  private endpoint = '/api/gemini'
 
   /**
-   * Stream generate content from Gemini API
+   * Stream generate content from Gemini API (via server proxy)
    * Using non-streaming endpoint for reliability, yielding result at once
    */
   async *streamGenerate(
     systemPrompt: string,
     userContent: string
   ): AsyncGenerator<string> {
-    const url = `${this.baseUrl}/${this.model}:generateContent?key=${this.apiKey}`
-
-    const response = await fetch(url, {
+    const response = await fetch(this.endpoint, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        contents: [
-          {
-            parts: [{ text: userContent }],
-          },
-        ],
-        systemInstruction: {
-          parts: [{ text: systemPrompt }],
-        },
-        generationConfig: {
-          temperature: 0.7,
-          maxOutputTokens: 1024,
-        },
-      }),
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ systemPrompt, userContent }),
     })
 
     if (!response.ok) {
-      const errorText = await response.text()
       let errorMessage = 'Failed to generate response'
 
       try {
-        const errorJson = JSON.parse(errorText)
-        if (errorJson.error?.message) {
-          errorMessage = errorJson.error.message
+        const errorJson = await response.json()
+        if (errorJson.error) {
+          errorMessage = errorJson.error
         }
       } catch {
         // Use default error message
       }
 
-      if (response.status === 400) {
-        throw new Error('Invalid API key. Please check your Gemini API key.')
-      } else if (response.status === 429) {
+      if (response.status === 429) {
         throw new Error('Rate limit exceeded. Please wait a moment and try again.')
       }
 
@@ -86,27 +59,10 @@ export class GeminiService {
     systemPrompt: string,
     userContent: string
   ): Promise<string> {
-    const url = `${this.baseUrl}/${this.model}:generateContent?key=${this.apiKey}`
-
-    const response = await fetch(url, {
+    const response = await fetch(this.endpoint, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        contents: [
-          {
-            parts: [{ text: userContent }],
-          },
-        ],
-        systemInstruction: {
-          parts: [{ text: systemPrompt }],
-        },
-        generationConfig: {
-          temperature: 0.7,
-          maxOutputTokens: 1024,
-        },
-      }),
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ systemPrompt, userContent }),
     })
 
     if (!response.ok) {

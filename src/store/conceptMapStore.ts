@@ -63,7 +63,6 @@ interface ConceptMapStore {
   isColorPickerOpen: boolean
   isChatModalOpen: boolean
   isLoadModalOpen: boolean
-  isApiKeyModalOpen: boolean
   isExtractModalOpen: boolean
   isExtractLoading: boolean
 
@@ -92,9 +91,6 @@ interface ConceptMapStore {
 
   // Difficulty
   difficultyLevel: number // 0-4: ELI5, Middle School, High School, Undergraduate, Expert
-
-  // Settings
-  apiKey: string | null
 
   // Toast
   toasts: ToastData[]
@@ -125,8 +121,6 @@ interface ConceptMapStore {
   closeChatModal: () => void
   openLoadModal: () => void
   closeLoadModal: () => void
-  openApiKeyModal: () => void
-  closeApiKeyModal: () => void
   openExtractModal: (terms: TermItem[]) => void
   closeExtractModal: () => void
   openReader: (title: string, content: string) => void
@@ -156,9 +150,6 @@ interface ConceptMapStore {
 
   // Difficulty
   setDifficultyLevel: (level: number) => void
-
-  // API Key
-  setApiKey: (key: string) => void
 
   // Toast
   addToast: (message: string, type: ToastData['type']) => void
@@ -191,7 +182,6 @@ export const useConceptMapStore = create<ConceptMapStore>()(
       isColorPickerOpen: false,
       isChatModalOpen: false,
       isLoadModalOpen: false,
-      isApiKeyModalOpen: false,
       isExtractModalOpen: false,
       isExtractLoading: false,
 
@@ -214,8 +204,6 @@ export const useConceptMapStore = create<ConceptMapStore>()(
       isChatStreaming: false,
 
       difficultyLevel: 2, // Default: High School
-
-      apiKey: import.meta.env.VITE_GEMINI_API_KEY || null,
 
       toasts: [],
 
@@ -295,14 +283,8 @@ export const useConceptMapStore = create<ConceptMapStore>()(
         promptType: PromptType,
         customPrompt?: string
       ) => {
-        const { selectedNodeId, compareNodeId, nodes, apiKey, difficultyLevel } = get()
+        const { selectedNodeId, compareNodeId, nodes, difficultyLevel } = get()
         if (!selectedNodeId) return
-
-        if (!apiKey) {
-          set({ isApiKeyModalOpen: true })
-          get().addToast('Please add your Gemini API key', 'error')
-          return
-        }
 
         // Compare requires 2 nodes
         if (promptType === PromptType.COMPARE && !compareNodeId) {
@@ -344,7 +326,7 @@ export const useConceptMapStore = create<ConceptMapStore>()(
           })
 
           try {
-            const service = new GeminiService(apiKey)
+            const service = new GeminiService()
             let fullResponse = ''
 
             for await (const chunk of service.streamGenerate(difficultyPrefix + config.systemPrompt, nodeText)) {
@@ -385,7 +367,7 @@ export const useConceptMapStore = create<ConceptMapStore>()(
               prompt = `${difficultyPrefix}${config.systemPrompt}\n\nUser's question: ${customPrompt}`
             }
 
-            const service = new GeminiService(apiKey)
+            const service = new GeminiService()
             for await (const chunk of service.streamGenerate(prompt, nodeText)) {
               set((state) => ({
                 currentResponse: state.currentResponse + chunk,
@@ -537,13 +519,7 @@ export const useConceptMapStore = create<ConceptMapStore>()(
       },
 
       regenerateNode: async (nodeId: string) => {
-        const { nodes, apiKey } = get()
-
-        if (!apiKey) {
-          set({ isApiKeyModalOpen: true })
-          get().addToast('Please add your Gemini API key', 'error')
-          return
-        }
+        const { nodes } = get()
 
         const node = nodes.find((n) => n.id === nodeId)
         if (!node || node.data.type !== NodeType.CONTENT) return
@@ -570,7 +546,7 @@ export const useConceptMapStore = create<ConceptMapStore>()(
 
         try {
           const nodeText = getNodeText(parentNode)
-          const service = new GeminiService(apiKey)
+          const service = new GeminiService()
 
           let newContent = ''
           for await (const chunk of service.streamGenerate(
@@ -673,9 +649,6 @@ export const useConceptMapStore = create<ConceptMapStore>()(
       openLoadModal: () => set({ isLoadModalOpen: true }),
       closeLoadModal: () => set({ isLoadModalOpen: false }),
 
-      openApiKeyModal: () => set({ isApiKeyModalOpen: true }),
-      closeApiKeyModal: () => set({ isApiKeyModalOpen: false }),
-
       openExtractModal: (terms: TermItem[]) =>
         set({ isExtractModalOpen: true, extractedTerms: terms }),
       closeExtractModal: () =>
@@ -688,7 +661,7 @@ export const useConceptMapStore = create<ConceptMapStore>()(
 
       addSelectedTerms: async (selectedIndices: number[]) => {
         get().pushHistory()
-        const { selectedNodeId, nodes, edges, extractedTerms, currentPromptType, apiKey, difficultyLevel } =
+        const { selectedNodeId, nodes, edges, extractedTerms, currentPromptType, difficultyLevel } =
           get()
         if (!selectedNodeId || selectedIndices.length === 0) return
 
@@ -705,11 +678,11 @@ export const useConceptMapStore = create<ConceptMapStore>()(
         if (selectedTerms.length === 0) return
 
         // Questions flow: generate answers and create content nodes
-        if (config?.generatesContentFromTerms && apiKey) {
+        if (config?.generatesContentFromTerms) {
           set({ isExtractModalOpen: false, isExtractLoading: true })
 
           try {
-            const service = new GeminiService(apiKey)
+            const service = new GeminiService()
             const DIFFICULTY_LABELS = [
               'Explain as if to a 5-year-old child. Use very simple words and analogies.',
               'Explain at a middle school level. Use simple language suitable for a 12-year-old.',
@@ -993,13 +966,7 @@ export const useConceptMapStore = create<ConceptMapStore>()(
       // ========== CHAT ACTIONS ==========
 
       sendChatMessage: async (message: string) => {
-        const { nodes, topic, apiKey, chatMessages } = get()
-
-        if (!apiKey) {
-          set({ isApiKeyModalOpen: true })
-          get().addToast('Please add your Gemini API key', 'error')
-          return
-        }
+        const { nodes, topic, chatMessages } = get()
 
         // Add user message
         const userMessage: ChatMessage = {
@@ -1029,7 +996,7 @@ export const useConceptMapStore = create<ConceptMapStore>()(
             topic
           ).replace('{nodeContents}', nodeContents)
 
-          const service = new GeminiService(apiKey)
+          const service = new GeminiService()
 
           // Create assistant message placeholder
           const assistantMessage: ChatMessage = {
@@ -1198,13 +1165,6 @@ export const useConceptMapStore = create<ConceptMapStore>()(
       // ========== DIFFICULTY ==========
 
       setDifficultyLevel: (level: number) => set({ difficultyLevel: level }),
-
-      // ========== API KEY ==========
-
-      setApiKey: (key: string) => {
-        set({ apiKey: key, isApiKeyModalOpen: false })
-        get().addToast('API key saved', 'success')
-      },
 
       // ========== TOAST ==========
 

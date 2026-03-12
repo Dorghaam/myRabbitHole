@@ -1,5 +1,4 @@
 export { ResponseModal } from './ResponseModal'
 export { ColorPickerModal } from './ColorPickerModal'
-export { ApiKeyModal } from './ApiKeyModal'
 export { LoadModal } from './LoadModal'
 export { ChatModal } from './ChatModal'

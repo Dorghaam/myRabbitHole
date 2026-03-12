@@ -28,19 +28,17 @@ const FALLBACK_SUGGESTIONS = [
 
 export function TopicInput() {
   const [topic, setTopic] = useState('')
-  const { setTopic: createTopic, apiKey, openApiKeyModal } = useConceptMapStore()
+  const { setTopic: createTopic } = useConceptMapStore()
   const [suggestions, setSuggestions] = useState<string[]>(FALLBACK_SUGGESTIONS)
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    if (!apiKey) return
-
     let cancelled = false
     setLoading(true)
 
     const fetchSuggestions = async () => {
       try {
-        const service = new GeminiService(apiKey)
+        const service = new GeminiService()
         const response = await service.generate(
           SUGGESTIONS_PROMPT,
           'Generate 6 fascinating topics for deep exploration.'
@@ -64,25 +62,15 @@ export function TopicInput() {
 
     fetchSuggestions()
     return () => { cancelled = true }
-  }, [apiKey])
+  }, [])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!topic.trim()) return
-
-    if (!apiKey) {
-      openApiKeyModal()
-      return
-    }
-
     createTopic(topic.trim())
   }
 
   const handleSuggestionClick = (suggestion: string) => {
-    if (!apiKey) {
-      openApiKeyModal()
-      return
-    }
     createTopic(suggestion)
   }
 
@@ -151,20 +139,6 @@ export function TopicInput() {
             )}
           </div>
         </div>
-
-        {/* API key hint */}
-        {!apiKey && (
-          <p className="text-center text-sm text-text-muted mt-8">
-            You'll need to add your{' '}
-            <button
-              onClick={openApiKeyModal}
-              className="text-primary-pink hover:underline"
-            >
-              Gemini API key
-            </button>{' '}
-            to get started
-          </p>
-        )}
       </div>
     </div>
   )
